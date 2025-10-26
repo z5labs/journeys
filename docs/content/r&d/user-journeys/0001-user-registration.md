@@ -225,7 +225,7 @@ Success for the SSO-based user registration journey will be measured through the
 
 ## Related Documentation
 
-- [ADR-XXXX: SSO Authentication Strategy] (to be created)
+- [ADR-0002: SSO Authentication Strategy](../adrs/0002-sso-authentication-strategy.md)
 - [ADR-XXXX: OAuth2/OIDC Provider Selection] (to be created)
 - [ADR-XXXX: Session Management] (to be created)
 - [API Documentation: GET /v1/auth/{provider}] (to be created - OAuth initiation endpoint)

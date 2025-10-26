@@ -4,7 +4,7 @@ description: >
     Adopt the Markdown Architectural Decision Records (MADR) format for documenting architectural decisions in this project.
 type: docs
 weight: 1
-status: "proposed"
+status: "accepted"
 date: 2025-10-25
 deciders: []
 consulted: []
