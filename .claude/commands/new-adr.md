@@ -5,10 +5,10 @@ description: Create a new Markdown Architectural Decision Record (MADR)
 Create a new Markdown Architectural Decision Record (MADR) following the MADR 4.0.0 standard.
 
 **Requirements:**
-1. All ADRs MUST be created in `docs/content/architecture/decisions/`
+1. All ADRs MUST be created in `docs/content/r&d/adrs/`
 2. Use naming format: `NNNN-title-with-dashes.md` where NNNN is zero-padded sequential (e.g., `0001-use-madr.md`)
 3. Ask the user for the ADR title/topic if not provided
-4. Determine the next sequential number by checking existing ADRs in `docs/content/architecture/decisions/`
+4. Determine the next sequential number by checking existing ADRs in `docs/content/r&d/adrs/`
 5. Fill in today's date in YYYY-MM-DD format
 6. Set initial status to "proposed"
 
@@ -16,7 +16,7 @@ Create a new Markdown Architectural Decision Record (MADR) following the MADR 4.
 
 ```markdown
 ---
-title: "[short title of solved problem and solution]"
+title: "[NNNN] [short title of solved problem and solution]"
 description: >
     [short summary of the context and problem statement]
 type: docs

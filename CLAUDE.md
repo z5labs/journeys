@@ -103,9 +103,33 @@ go mod download                 # Download dependencies
 go list -m all                  # List all dependencies
 ```
 
+## Documentation
+
+The project uses Hugo with the Docsy theme for documentation. All documentation source files are in the `docs/` directory.
+
+### Hugo Commands
+
+Run from the repository root:
+
+```bash
+cd docs
+hugo server                     # Start development server with live reload
+hugo                           # Build static site to docs/public/
+hugo --minify                  # Build minified production site
+npm run serve                  # Alternative: run dev server via npm
+npm run build                  # Alternative: build via npm
+```
+
+### Documentation Structure
+
+- `docs/content/` - Documentation content
+  - `_index.md` - Home page
+  - `r&d/` - Research & Development documentation
+    - `adrs/` - Architectural Decision Records (ADRs)
+
 ## Custom Slash Commands
 
-- `/new-adr` - Create a new Markdown Architectural Decision Record (MADR) in `docs/content/architecture/decisions/` following the MADR 4.0.0 standard
+- `/new-adr` - Create a new Markdown Architectural Decision Record (MADR) in `docs/content/r&d/adrs/` following the MADR 4.0.0 standard
 
 ## Project Conventions
 
@@ -115,7 +139,7 @@ go list -m all                  # List all dependencies
 - Stories require a description and acceptance criteria
 
 ### Architectural Decisions
-- ADRs are stored in `docs/content/architecture/decisions/`
+- ADRs are stored in `docs/content/r&d/adrs/`
 - Use the `/new-adr` command to create new ADRs
 - ADRs follow MADR 4.0.0 format with Hugo front matter
 - Naming convention: `NNNN-title-with-dashes.md` (zero-padded sequential numbering)
