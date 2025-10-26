@@ -126,10 +126,12 @@ npm run build                  # Alternative: build via npm
   - `_index.md` - Home page
   - `r&d/` - Research & Development documentation
     - `adrs/` - Architectural Decision Records (ADRs)
+    - `user-journeys/` - User Journey documentation with flow diagrams and technical requirements
 
 ## Custom Slash Commands
 
 - `/new-adr` - Create a new Markdown Architectural Decision Record (MADR) in `docs/content/r&d/adrs/` following the MADR 4.0.0 standard
+- `/new-user-journey` - Create a new User Journey document in `docs/content/r&d/user-journeys/` with flow diagrams and prioritized technical requirements
 
 ## Project Conventions
 
@@ -143,6 +145,16 @@ npm run build                  # Alternative: build via npm
 - Use the `/new-adr` command to create new ADRs
 - ADRs follow MADR 4.0.0 format with Hugo front matter
 - Naming convention: `NNNN-title-with-dashes.md` (zero-padded sequential numbering)
+
+### User Journeys
+- User journeys are stored in `docs/content/r&d/user-journeys/`
+- Use the `/new-user-journey` command to create new journeys
+- Each journey includes:
+  - Mermaid flow diagram representing user interactions
+  - Technical requirements with priority levels (P0/P1/P2)
+  - Requirements categorized by type: Access Control, Rate Limits, Analytics, Data Storage, etc.
+- Naming convention: `NNNN-title-with-dashes.md` (zero-padded sequential numbering)
+- Priority levels help determine what must be in initial design (P0) vs. what can be phased (P1/P2)
 
 ### Code Organization
 - Each endpoint should be in its own file in `api/endpoint/`
