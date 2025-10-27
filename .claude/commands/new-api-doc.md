@@ -38,8 +38,6 @@ type: docs
 weight: 1000
 status: "draft"
 date: YYYY-MM-DD
-method: "METHOD"
-path: "/path"
 ---
 
 ## API Overview
