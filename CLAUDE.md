@@ -127,6 +127,10 @@ npm run build                  # Alternative: build via npm
   - `r&d/` - Research & Development documentation
     - `adrs/` - Architectural Decision Records (ADRs)
     - `user-journeys/` - User Journey documentation with flow diagrams and technical requirements
+    - `analysis/open-source/` - Research documents on open-source technologies
+      - `keycloak.md` - Keycloak OIDC provider research
+      - `open-policy-agent.md` - OPA (policy-based authorization) research
+      - `openfga.md` - OpenFGA (relationship-based authorization) research
 
 ## Custom Slash Commands
 
@@ -145,6 +149,12 @@ npm run build                  # Alternative: build via npm
 - Use the `/new-adr` command to create new ADRs
 - ADRs follow MADR 4.0.0 format with Hugo front matter
 - Naming convention: `NNNN-title-with-dashes.md` (zero-padded sequential numbering)
+- Status values: `proposed` | `accepted` | `rejected` | `deprecated` | `superseded by ADR-XXXX`
+
+**Key Decisions:**
+- **ADR-0002** (accepted): SSO Authentication Strategy - OAuth2/OIDC with external providers
+- **ADR-0003** (accepted): OAuth2/OIDC Provider Selection - Google, Facebook, and Apple
+- **ADR-0004** (proposed): Session Management - Strategy for managing user sessions after authentication
 
 ### User Journeys
 - User journeys are stored in `docs/content/r&d/user-journeys/`
@@ -161,3 +171,39 @@ npm run build                  # Alternative: build via npm
 - Endpoint registration happens in `api/app/app.go:20` via `endpoint.RegisterEndpoint(api)`
 - Use `humus.Logger("component_name")` for structured logging with slog
 - Request/Response structs use JSON tags for serialization
+
+## Authentication and Authorization Architecture
+
+The project has decided on a separation-of-concerns approach for authentication and authorization:
+
+### Authentication (ADR-0002, ADR-0003)
+- **Strategy:** OAuth2/OIDC with external providers (Google, Facebook, Apple)
+- **No custom password management:** Users authenticate via established identity providers
+- **JWT tokens:** OAuth2/OIDC providers issue JWT access tokens containing user identity
+- **Provider mapping:** User identifiers are mapped from provider-specific IDs (e.g., `user:google:123456`)
+
+### Authorization (Research Phase)
+Two authorization systems have been researched for fine-grained access control:
+
+1. **Open Policy Agent (OPA)** - Policy-based authorization
+   - Evaluates policies written in Rego language
+   - Best for complex rules, attribute-based decisions, API gateway integration
+   - See `docs/content/r&d/analysis/open-source/open-policy-agent.md`
+
+2. **OpenFGA** - Relationship-based authorization (ReBAC)
+   - Stores user-resource relationships, traverses graphs for decisions
+   - Best for user-resource permissions, sharing, hierarchical organizations
+   - Inspired by Google Zanzibar
+   - See `docs/content/r&d/analysis/open-source/openfga.md`
+
+### Integration Pattern
+OAuth2/OIDC handles **authentication** ("Who are you?"), while OPA or OpenFGA handles **authorization** ("What can you access?"):
+
+```
+1. User authenticates with OAuth2 provider → JWT token
+2. API validates JWT, extracts user identity
+3. API calls authorization system to check permissions
+4. Authorization system returns allow/deny decision
+```
+
+**Example:** User authenticates with Google, API validates JWT, then checks OpenFGA to see if `user:google:123` can view `journey:550e8400-...`
