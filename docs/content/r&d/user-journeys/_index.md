@@ -4,7 +4,7 @@ linkTitle: "User Journeys"
 description: >
   User journey documentation defining user flows and technical requirements for the journey tracking system.
 type: docs
-weight: 20
+weight: 10
 ---
 
 This section contains user journey documentation that defines how users interact with the journey tracking system. Each user journey includes:

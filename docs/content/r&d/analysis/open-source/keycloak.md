@@ -7,8 +7,6 @@ weight: 1
 date: 2025-10-26
 ---
 
-# Keycloak Research: OAuth2/OIDC Identity Provider
-
 This document provides comprehensive research on Keycloak as a potential identity and access management (IAM) solution for the journey tracking REST API. The research focuses on Keycloak's OAuth2/OIDC support, deployment options, and operational requirements.
 
 **Research Date:** 2025-10-26
