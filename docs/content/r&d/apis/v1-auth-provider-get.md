@@ -4,10 +4,8 @@ description: >
     Get authentication provider details and initiate OAuth2/OIDC authentication flow
 type: docs
 weight: 1000
-status: "draft"
+status: "reviewed"
 date: 2025-10-26
-method: "GET"
-path: "/v1/auth/{provider}"
 ---
 
 ## API Overview
