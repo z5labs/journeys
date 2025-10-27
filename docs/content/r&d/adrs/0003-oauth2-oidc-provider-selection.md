@@ -4,7 +4,7 @@ description: >
     Selection of specific OAuth2/OpenID Connect identity providers for SSO authentication in the journey tracking API
 type: docs
 weight: 3
-status: "proposed"
+status: "accepted"
 date: 2025-10-26
 deciders: []
 consulted: []
@@ -204,3 +204,25 @@ Provider configuration will be externalized (environment variables or config fil
 - Easy addition of new providers without code changes
 - Provider-specific settings (client ID, client secret, scopes)
 - Provider enable/disable without code deployment
+
+### Integration with Fine-Grained Authorization
+
+OAuth2/OIDC providers (Google, Facebook, Apple) handle **authentication** (verifying user identity), while fine-grained authorization (determining what resources a user can access) can be implemented using a relationship-based system like OpenFGA. This separation of concerns is a recommended pattern for modern SaaS applications.
+
+**How it works:**
+1. User authenticates with Google/Facebook/Apple → receives JWT containing user identity
+2. API validates JWT and extracts user identifier from `sub` claim
+3. User identifier is mapped to OpenFGA format (e.g., `user:google:123456`, `user:facebook:789`, `user:apple:xyz`)
+4. API checks OpenFGA to determine if user has required relationship to resource (e.g., "Can this user view journey X?")
+5. OpenFGA returns allow/deny decision based on stored relationships (owner, editor, viewer, workspace member, etc.)
+
+**Example authorization check:**
+```go
+// After validating JWT from Google/Facebook/Apple
+userId := fmt.Sprintf("user:%s:%s", provider, jwtClaims["sub"])
+
+// Check with OpenFGA
+allowed := fgaClient.Check(ctx, userId, "viewer", "journey:550e8400-...")
+```
+
+This approach enables sophisticated access control patterns (ownership, sharing, team access, hierarchical permissions) while maintaining the flexibility to use any OAuth2/OIDC provider for authentication. See [OpenFGA Research](../../analysis/open-source/openfga.md) for detailed integration patterns and deployment strategies.
