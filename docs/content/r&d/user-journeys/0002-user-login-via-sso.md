@@ -4,7 +4,7 @@ description: >
     User authentication flow for returning users logging in through OAuth2/OIDC single sign-on providers
 type: docs
 weight: 2
-status: "draft"
+status: "accepted"
 date: 2025-01-26
 owner: ""
 stakeholders: []
