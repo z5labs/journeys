@@ -4,7 +4,7 @@ description: >
     User registration flow for creating new accounts in the journey tracking system
 type: docs
 weight: 1
-status: "draft"
+status: "accepted"
 date: 2025-10-25
 owner: ""
 stakeholders: []
