@@ -230,8 +230,8 @@ Success for the SSO-based user registration journey will be measured through the
 - [ADR-0004: Session Management](../adrs/0004-session-management.md)
 - [ADR-NNNN: Account Linking] (to be created)
 - [API Documentation: GET /v1/auth/{provider}](../apis/v1-auth-provider-get.md)
-- [API Documentation: GET /v1/auth/{provider}/callback] (to be created - OAuth callback handler)
-- [User Journey: User Login via SSO] (to be created)
+- [API Documentation: GET /v1/auth/{provider}/callback](../apis/v1-auth-provider-callback-get.md)
+- [User Journey: User Login via SSO](0002-user-login-via-sso.md)
 
 ## Notes
 
