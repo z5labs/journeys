@@ -4,7 +4,7 @@ description: >
     Selection of session management strategy for maintaining user authentication state in the journey tracking API
 type: docs
 weight: 4
-status: "proposed"
+status: "accepted"
 date: 2025-01-26
 deciders: []
 consulted: []
@@ -37,13 +37,23 @@ Following the decision to implement SSO authentication using OAuth 2.0 with Open
 
 ## Decision Outcome
 
-Chosen option: "[option TBD]", because [justification to be determined based on requirements analysis].
+Chosen option: "[option 1] Stateless JWT-only approach (no server-side sessions)", because it provides simpler and faster development without requiring additional infrastructure for session storage. The API can validate JWT tokens on each request without database lookups, enabling a fully stateless architecture that scales horizontally without session affinity concerns. This approach eliminates the operational overhead of managing a session store while maintaining security through proper JWT validation and reasonable token expiration policies.
 
 ### Consequences
 
-* Good, because [positive consequence]
-* Bad, because [negative consequence]
-* ...
+* Good, because fully stateless API enables horizontal scaling without session affinity
+* Good, because no session store infrastructure required (no Redis/database for sessions)
+* Good, because lower latency - no session lookup on each request
+* Good, because simpler deployment and operations - no session store to maintain
+* Good, because JWT contains user identity and can include claims for authorization
+* Good, because aligns with microservices best practices (stateless services)
+* Good, because faster initial development - no session management code required
+* Bad, because difficult to revoke tokens before expiration (logout, security breach scenarios)
+* Bad, because no server-side control over active sessions
+* Bad, because token refresh requires client-side logic (handling refresh tokens)
+* Bad, because need to balance token lifetime (short = frequent refresh, long = security risk)
+* Neutral, because JWT validation requires cryptographic signature check on every request
+* Neutral, because can add server-side session tracking later if needed
 
 ### Confirmation
 

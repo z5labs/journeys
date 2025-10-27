@@ -154,7 +154,7 @@ npm run build                  # Alternative: build via npm
 **Key Decisions:**
 - **ADR-0002** (accepted): SSO Authentication Strategy - OAuth2/OIDC with external providers
 - **ADR-0003** (accepted): OAuth2/OIDC Provider Selection - Google, Facebook, and Apple
-- **ADR-0004** (proposed): Session Management - Strategy for managing user sessions after authentication
+- **ADR-0004** (accepted): Session Management - Stateless JWT-only approach (no server-side sessions)
 
 ### User Journeys
 - User journeys are stored in `docs/content/r&d/user-journeys/`
