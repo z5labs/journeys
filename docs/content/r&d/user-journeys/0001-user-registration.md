@@ -227,11 +227,11 @@ Success for the SSO-based user registration journey will be measured through the
 
 - [ADR-0002: SSO Authentication Strategy](../adrs/0002-sso-authentication-strategy.md)
 - [ADR-0003: OAuth2/OIDC Provider Selection](../adrs/0003-oauth2-oidc-provider-selection.md)
-- [ADR-XXXX: Session Management] (to be created)
+- [ADR-0004: Session Management](../adrs/0004-session-management.md)
+- [ADR-NNNN: Account Linking] (to be created)
 - [API Documentation: GET /v1/auth/{provider}] (to be created - OAuth initiation endpoint)
 - [API Documentation: GET /v1/auth/{provider}/callback] (to be created - OAuth callback handler)
 - [User Journey: User Login via SSO] (to be created)
-- [User Journey: Account Linking] (to be created)
 
 ## Notes
 
