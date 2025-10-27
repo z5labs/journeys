@@ -1,5 +1,5 @@
 ---
-title: "0001 Use MADR for architectural decision records"
+title: "[0001] Use MADR for architectural decision records"
 description: >
     Adopt the Markdown Architectural Decision Records (MADR) format for documenting architectural decisions in this project.
 type: docs
