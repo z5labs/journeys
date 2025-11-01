@@ -4,18 +4,27 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a Go REST API project built with the z5labs/humus framework. The application is a journey tracking system that allows users to create and manage journeys. The codebase follows a clean architecture pattern with the main API code located in the `api/` directory.
+This is a journey tracking system project that will include a Go REST API built with the z5labs/humus framework. The application will allow users to create and manage journeys. Currently, the repository contains comprehensive documentation and architectural decisions. The API implementation will follow a clean architecture pattern with the main API code located in the `api/` directory (to be created).
 
 ## Architecture
 
 ### Project Structure
+- `docs/` - Hugo-based documentation site using Docsy theme
+  - `content/r&d/adrs/` - Architectural Decision Records
+  - `content/r&d/user-journeys/` - User journey documentation with flow diagrams
+  - `content/r&d/analysis/open-source/` - Technology research documents
+- `.claude/` - Claude Code custom commands
+  - `commands/` - Slash command definitions for `/new-adr`, `/new-user-journey`, etc.
+- `.github/` - GitHub configuration
+  - `ISSUE_TEMPLATE/` - Issue templates for stories and other types
+
+**Planned API Structure** (not yet implemented):
 - `api/` - Main Go module containing the REST API service
   - `main.go` - Entry point that loads configuration and initializes the REST API using the humus framework
-  - `config.yaml` - Embedded configuration file (currently empty but loaded at runtime)
+  - `config.yaml` - Embedded configuration file
   - `app/` - Application initialization and configuration
     - `app.go` - Contains the `Init` function that sets up the REST API and registers endpoints
-  - `endpoint/` - HTTP endpoint handlers
-    - `create_journey.go` - Handler for creating new journeys (POST /v1/journey)
+  - `endpoint/` - HTTP endpoint handlers (one file per endpoint)
 
 ### Key Frameworks and Libraries
 - **github.com/z5labs/humus** - Primary REST framework providing:
@@ -36,7 +45,7 @@ This is a Go REST API project built with the z5labs/humus framework. The applica
    - A `Handle` method implementing the business logic
 
 ### Endpoint Pattern
-Endpoints follow a consistent pattern (see `endpoint/create_journey.go:20-36`):
+When implementing endpoints, follow this consistent pattern:
 ```go
 func RegisterEndpoint(api *rest.Api) {
     h := &HandlerStruct{
@@ -63,44 +72,20 @@ Handlers implement a `Handle(ctx context.Context, req *Request) (*Response, erro
 
 All commands should be run from the repository root unless otherwise specified.
 
-### Working Directory
-The Go module is located in `api/`, so most Go commands need to be run from that directory or with the appropriate path.
+### API Development (when implemented)
+The Go module will be located in `api/`, so most Go commands need to be run from that directory:
 
-### Building
 ```bash
 cd api
-go build -o ../dist/api .
-```
-
-### Running Tests
-```bash
-cd api
+go build -o ../dist/api .       # Build the API
 go test ./...                    # Run all tests
 go test ./endpoint              # Run tests for a specific package
 go test -v ./...                # Run with verbose output
 go test -run TestName ./...     # Run a specific test
-```
-
-### Running the Application
-```bash
-cd api
-go run .
-```
-
-### Linting and Code Quality
-Standard Go tools:
-```bash
-cd api
+go run .                        # Run the application
 go fmt ./...                    # Format code
 go vet ./...                    # Run static analysis
-```
-
-### Dependency Management
-```bash
-cd api
 go mod tidy                     # Clean up dependencies
-go mod download                 # Download dependencies
-go list -m all                  # List all dependencies
 ```
 
 ## Documentation
@@ -155,6 +140,8 @@ npm run build                  # Alternative: build via npm
 - **ADR-0002** (accepted): SSO Authentication Strategy - OAuth2/OIDC with external providers
 - **ADR-0003** (accepted): OAuth2/OIDC Provider Selection - Google, Facebook, and Apple
 - **ADR-0004** (accepted): Session Management - Stateless JWT-only approach (no server-side sessions)
+- **ADR-0005** (accepted): Account Linking - Strategy for linking multiple OAuth providers to single user account
+- **ADR-0006** (proposed): API Development Tech Stack Selection - z5labs/humus framework for REST API
 
 ### User Journeys
 - User journeys are stored in `docs/content/r&d/user-journeys/`
@@ -166,11 +153,17 @@ npm run build                  # Alternative: build via npm
 - Naming convention: `NNNN-title-with-dashes.md` (zero-padded sequential numbering)
 - Priority levels help determine what must be in initial design (P0) vs. what can be phased (P1/P2)
 
-### Code Organization
+### Code Organization (for future API implementation)
 - Each endpoint should be in its own file in `api/endpoint/`
-- Endpoint registration happens in `api/app/app.go:20` via `endpoint.RegisterEndpoint(api)`
+- Endpoint registration happens in `api/app/app.go` via `endpoint.RegisterEndpoint(api)`
 - Use `humus.Logger("component_name")` for structured logging with slog
 - Request/Response structs use JSON tags for serialization
+
+### Documentation Organization
+- ADRs document architectural decisions following MADR 4.0.0 format
+- User journeys include Mermaid diagrams and prioritized technical requirements (P0/P1/P2)
+- Technology research documents provide analysis of potential solutions
+- All documentation includes Hugo front matter for proper site generation
 
 ## Authentication and Authorization Architecture
 
