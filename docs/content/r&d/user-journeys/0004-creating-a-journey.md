@@ -12,16 +12,17 @@ stakeholders: []
 
 ## Overview
 
-This journey describes the process by which an authenticated user creates a new journey in the system. A journey represents a user-defined tracking entity (e.g., a fitness goal, learning path, project timeline). The journey creation flow ensures proper validation, authorization, and data persistence while providing a smooth user experience.
+This journey describes the process by which an authenticated user creates a new journey to document a real-life adventure. A journey represents a collection of photos, videos, locations, and transportation routes associated with a specific trip or adventure (e.g., a weekend hiking trip, a European vacation, a road trip across the country). The journey creation flow ensures proper validation, authorization, and data persistence while providing a smooth user experience.
 
-**User Persona**: Authenticated user who wants to track progress on a personal goal or activity.
+**User Persona**: Authenticated user who is about to embark on (or has recently completed) an adventure and wants to capture and organize media, locations, and routes associated with that experience.
 
-**Business Value**: Enabling users to create journeys is the core value proposition of the application, allowing them to organize and track their activities over time.
+**Business Value**: Enabling users to create journeys is the core value proposition of the application, allowing them to organize adventure content in a private, user-controlled way rather than on public social media platforms.
 
 **User Goals**:
-- Create a new journey with a meaningful name and description
+- Create a new journey with a meaningful name and description for their adventure
 - Receive immediate confirmation that the journey was created
-- Be able to start tracking progress immediately after creation
+- Be able to start adding photos, videos, locations, and routes immediately after creation
+- Keep the journey fully private by default (shared only out-of-band with friends/family if desired)
 
 ## Journey Flow Diagram
 
@@ -115,12 +116,14 @@ graph TD
 - **Description**: Store journey records with the following schema:
   - `id` (UUID, primary key)
   - `owner_id` (string, maps to OAuth provider user ID, indexed)
-  - `name` (string, max 200 characters, required)
-  - `description` (string, max 5000 characters, optional)
+  - `name` (string, max 200 characters, required) - e.g., "Summer 2025 Europe Trip"
+  - `description` (string, max 5000 characters, optional) - e.g., "Two week adventure through France and Italy"
+  - `start_date` (timestamp, optional) - When the adventure began or is planned to begin
+  - `end_date` (timestamp, optional) - When the adventure ended or is planned to end
   - `created_at` (timestamp, required)
   - `updated_at` (timestamp, required)
   - `status` (enum: active, archived, deleted, required, default: active)
-- **Rationale**: Core data model for journeys. Includes necessary fields for ownership, display, and lifecycle management.
+- **Rationale**: Core data model for journeys. Includes necessary fields for ownership, display, lifecycle management, and temporal context of the adventure.
 
 #### REQ-DS-002
 - **Priority**: P0
@@ -219,28 +222,40 @@ graph TD
 
 ## Related Documentation
 
+**Existing ADRs:**
 - [ADR-0002: SSO Authentication Strategy](../adrs/0002-sso-authentication-strategy.md) - Authentication approach using OAuth2/OIDC
 - [ADR-0004: Session Management Strategy](../adrs/0004-session-management-strategy.md) - JWT token validation
 - [ADR-0006: API Development Tech Stack Selection](../adrs/0006-api-dev-tech-stack-selection.md) - Humus framework usage
+
+**Required ADRs (Not Yet Created):**
+- **Database Technology Selection** - Need to decide on database for storing journeys (PostgreSQL, MySQL, etc.) to support REQ-DS-001 through REQ-DS-004
+- **Analytics/Observability Strategy** - Need to decide how analytics events will be recorded and stored to support REQ-AN-001 through REQ-AN-003 (OpenTelemetry metrics? Custom event logging? Third-party service?)
+
+**Related User Journeys:**
 - [User Journey 0001: User Registration](0001-user-registration.md) - How users initially authenticate
 - [User Journey 0002: User Login via SSO](0002-user-login-via-sso.md) - How users authenticate before creating journeys
 
 ## Notes
 
 **Future Enhancements:**
-- Journey templates (e.g., "Fitness Journey", "Learning Path") to accelerate creation
-- Rich text editor for journey descriptions
-- Image/media attachments for journeys
-- Journey visibility settings (private, public, shared with specific users)
-- Journey categories/tags for organization
-- Duplicate journey feature to create variations
+- Journey templates (e.g., "Road Trip", "Hiking Adventure", "City Exploration") to accelerate creation
+- Rich text editor for journey descriptions with markdown support
+- Cover photo selection during journey creation
+- Journey visibility settings (private by default, with out-of-band sharing options)
+- Journey categories/tags for organization (e.g., #hiking, #europe, #family)
+- Duplicate journey feature to create similar trips (e.g., annual camping trips)
+- Import journey from GPX/KML files (for pre-planned routes)
+- Geo-fence triggers to automatically suggest journey creation when entering new locations
 
 **Technical Considerations:**
 - Consider implementing optimistic UI updates on the client side for perceived performance
-- May need to implement eventual consistency patterns if journeys become shareable across users
+- Mobile-first design is critical since users will likely create journeys on their phones while traveling
+- Consider offline-first capabilities to allow journey creation without internet connectivity
 - Future migrations may require schema changes; ensure database supports migrations (e.g., Flyway, Liquibase, or custom Go migration tool)
+- Journey creation may need to support batch/bulk operations if users import from existing photo collections
 
 **Business Considerations:**
 - Journey limits may be used to differentiate pricing tiers (free vs. premium)
 - Creation patterns (time of day, frequency) could inform notification/engagement strategies
-- High creation rates with low engagement may indicate UX issues in subsequent steps
+- High creation rates with low content addition may indicate users aren't finding value in the media/location features
+- Privacy-first approach is a key differentiator from social media platforms - ensure this is clear in UX
