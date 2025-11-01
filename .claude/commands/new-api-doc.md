@@ -12,8 +12,6 @@ Create a new API Documentation page to document REST API endpoints.
 4. Ask the user for URL path if not provided (e.g., `/v1/journey`)
 5. Fill in today's date in YYYY-MM-DD format
 6. Set initial status to "draft"
-7. Create the `docs/content/r&d/apis/` directory if it doesn't exist
-8. Create an `_index.md` file in `docs/content/r&d/apis/` if it doesn't exist
 
 **Filename Generation:**
 - Remove leading slash from path
@@ -302,24 +300,3 @@ curl -X METHOD https://api.example.com/path \
 ```
 
 **Status values:** `draft` | `reviewed` | `published` | `deprecated`
-
-**_index.md template for `docs/content/r&d/apis/`:**
-
-```markdown
----
-title: "API Documentation"
-description: "REST API endpoint documentation for the Journeys application"
-type: docs
-weight: 30
----
-
-This section contains detailed documentation for all REST API endpoints in the Journeys application.
-
-## Overview
-
-The Journeys API provides programmatic access to journey management functionality. All endpoints use JSON for request and response bodies and follow RESTful conventions.
-
-## API Endpoints
-
-Browse the documentation for individual API endpoints using the navigation menu.
-```
