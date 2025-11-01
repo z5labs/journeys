@@ -4,7 +4,7 @@ description: >
     Retrieve a list of OAuth2/OIDC providers linked to the authenticated user's account
 type: docs
 weight: 1000
-status: "draft"
+status: "reviewed"
 date: 2025-11-01
 ---
 
