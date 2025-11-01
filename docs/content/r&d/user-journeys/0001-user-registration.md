@@ -91,8 +91,8 @@ Finally, the application determines if this is the user's first visit. New users
 
 #### REQ-AC-004
 - **Priority**: P1
-- **Description**: Support multiple identity providers per user account (account linking)
-- **Rationale**: Allows users to sign in with different providers to the same account
+- **Description**: Support multiple identity providers per user account via explicit user-initiated linking (see [ADR-0005](../adrs/0005-account-linking.md))
+- **Rationale**: Allows users to sign in with different providers to the same account. Implementation uses explicit user-initiated linking (not automatic) to prevent unauthorized account takeover while giving users full control. See [User Journey 0003](0003-account-linking.md) for detailed flows.
 
 #### REQ-AC-005
 - **Priority**: P2
@@ -228,10 +228,11 @@ Success for the SSO-based user registration journey will be measured through the
 - [ADR-0002: SSO Authentication Strategy](../adrs/0002-sso-authentication-strategy.md)
 - [ADR-0003: OAuth2/OIDC Provider Selection](../adrs/0003-oauth2-oidc-provider-selection.md)
 - [ADR-0004: Session Management](../adrs/0004-session-management.md)
-- [ADR-NNNN: Account Linking] (to be created)
+- [ADR-0005: Account Linking Strategy](../adrs/0005-account-linking.md)
 - [API Documentation: GET /v1/auth/{provider}](../apis/v1-auth-provider-get.md)
 - [API Documentation: GET /v1/auth/{provider}/callback](../apis/v1-auth-provider-callback-get.md)
 - [User Journey: User Login via SSO](0002-user-login-via-sso.md)
+- [User Journey: Account Linking](0003-account-linking.md)
 
 ## Notes
 
@@ -241,7 +242,7 @@ Success for the SSO-based user registration journey will be measured through the
 - **Provider API Quotas**: Monitor API usage against provider quotas. Most providers offer generous free tiers but have limits on requests per second.
 - **GDPR Compliance**: Ensure proper consent for data collection during registration. Store only necessary profile data from providers.
 - **Email Verification**: While SSO providers verify emails, verify the `email_verified` claim in ID tokens before trusting email addresses.
-- **Account Linking Strategy**: Consider whether to automatically link accounts with matching verified emails or require explicit user action.
+- **Account Linking Strategy**: [ADR-0005](../adrs/0005-account-linking.md) has decided on explicit user-initiated linking only (not automatic linking). Linking flows are documented in [User Journey 0003](0003-account-linking.md).
 - **Fallback Authentication**: Consider if a fallback authentication method (email/password) is needed for users who can't or won't use SSO providers.
 - **Testing**: Implement comprehensive OAuth flow testing including error scenarios, expired tokens, and provider outages.
 - **Future Considerations**:

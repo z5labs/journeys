@@ -91,6 +91,9 @@ Once the account is verified, the application creates a stateless session by set
 **Dashboard Access:**
 The user is redirected to their dashboard, where the application uses the JWT to authorize requests and load the user's journeys and associated data.
 
+**Account Linking During Login:**
+The system may detect during the OAuth callback (step Y in the diagram) that the verified email matches an existing account registered with a different provider. In this case, the system presents the user with an account linking option. Users can choose to link their accounts (by authenticating with both providers) or create a new separate account. For the complete account linking flows, see [User Journey 0003](0003-account-linking.md).
+
 ## Technical Requirements
 
 ### Access Control
@@ -255,8 +258,8 @@ The user is redirected to their dashboard, where the application uses the JWT to
 
 #### REQ-OT-010
 - **Priority**: P2
-- **Description**: Support account linking workflow for users who registered with different provider
-- **Rationale**: Helps users who forget which provider they used for registration
+- **Description**: Support account linking workflow for users who registered with different provider (see [User Journey 0003](0003-account-linking.md))
+- **Rationale**: Helps users who forget which provider they used for registration. Linking can be initiated during login (if matching email detected) or from account settings. See [User Journey 0003](0003-account-linking.md) for complete flows and technical details.
 
 ## Success Metrics
 
@@ -279,7 +282,7 @@ Success for the SSO-based user login journey will be measured through the follow
 - [User Journey: User Registration](0001-user-registration.md)
 - [API Documentation: GET /v1/auth/{provider}](../apis/v1-auth-provider-get.md)
 - [API Documentation: GET /v1/auth/{provider}/callback](../apis/v1-auth-provider-callback-get.md)
-- [User Journey: Account Linking] (to be created)
+- [User Journey: Account Linking](0003-account-linking.md)
 - [User Journey: Logout] (to be created)
 
 ## Notes
