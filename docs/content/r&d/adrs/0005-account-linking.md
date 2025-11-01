@@ -4,7 +4,7 @@ description: >
     Strategy for allowing users to link multiple OAuth2/OIDC provider identities (Google, Facebook, Apple) to a single user account.
 type: docs
 weight: 5
-status: "proposed"
+status: "accepted"
 date: 2025-11-01
 deciders: []
 consulted: []
@@ -39,12 +39,20 @@ Current implementation already supports storing multiple provider identities per
 
 ## Decision Outcome
 
-Chosen option: "[To be determined - placeholder for decision]", because [justification to be added].
+Chosen option: "**Option 2: Explicit User-Initiated Linking Only**", because it provides the most secure approach while giving users full control and transparency over their account linking decisions.
 
 ### Consequences
 
-* Good, because [positive consequence]
-* Bad, because [negative consequence]
+* Good, because it prevents automatic account takeover scenarios where a compromised email could lead to unauthorized account linking
+* Good, because users are fully aware and in control of when and how their provider identities are linked
+* Good, because users must prove they control both identities before linking occurs, adding a critical security validation step
+* Good, because the approach is transparent and predictable, making it easier to explain in security audits and user documentation
+* Good, because users can review and manage their linked providers, including unlinking providers they no longer wish to use
+* Bad, because it requires additional development effort to implement new API endpoints (`POST /v1/account/link/{provider}`, `DELETE /v1/account/unlink/{provider}`) and UI components for account management
+* Bad, because it adds friction to the user experience by requiring explicit action rather than automatic linking
+* Bad, because it doesn't automatically solve the "forgot which provider" problem - users must remember or try multiple providers during login
+* Bad, because some users may ignore linking prompts and inadvertently create duplicate accounts with the same email
+* Neutral, because while it requires more implementation work, the security benefits and user control outweigh the development cost for a P1 requirement
 
 ### Confirmation
 
