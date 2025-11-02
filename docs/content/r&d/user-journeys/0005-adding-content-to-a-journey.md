@@ -4,7 +4,7 @@ description: >
     This user journey describes how authenticated users add various types of content (photos, videos, locations, and routes) to their existing journeys.
 type: docs
 weight: 5
-status: "draft"
+status: "accepted"
 date: 2025-11-01
 owner: ""
 stakeholders: []
