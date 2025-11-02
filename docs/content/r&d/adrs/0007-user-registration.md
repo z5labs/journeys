@@ -5,7 +5,7 @@ description: >
 type: docs
 weight: 7
 category: "user-journey"
-status: "proposed"
+status: "accepted"
 date: 2025-11-01
 deciders: []
 consulted: []
