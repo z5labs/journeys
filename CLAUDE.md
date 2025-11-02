@@ -68,6 +68,11 @@ func RegisterEndpoint(api *rest.Api) {
 
 Handlers implement a `Handle(ctx context.Context, req *Request) (*Response, error)` method.
 
+## Development Tools
+
+### MCP Server Configuration
+The repository includes a `.mcp.json` file configuring the gopls MCP server for enhanced Go language support in Claude Code. This provides Go-aware tools for workspace analysis, symbol search, file context, and diagnostics (when the `api/` directory is created and contains Go code).
+
 ## Development Commands
 
 All commands should be run from the repository root unless otherwise specified.
@@ -112,22 +117,32 @@ npm run build                  # Alternative: build via npm
   - `r&d/` - Research & Development documentation
     - `adrs/` - Architectural Decision Records (ADRs)
     - `user-journeys/` - User Journey documentation with flow diagrams and technical requirements
+    - `apis/` - REST API endpoint documentation with detailed request/response schemas
     - `analysis/open-source/` - Research documents on open-source technologies
       - `keycloak.md` - Keycloak OIDC provider research
       - `open-policy-agent.md` - OPA (policy-based authorization) research
       - `openfga.md` - OpenFGA (relationship-based authorization) research
 
+The documentation site uses Hugo with the Docsy theme. Hugo configuration is in `docs/hugo.yaml`.
+
 ## Custom Slash Commands
 
 - `/new-adr` - Create a new Markdown Architectural Decision Record (MADR) in `docs/content/r&d/adrs/` following the MADR 4.0.0 standard
 - `/new-user-journey` - Create a new User Journey document in `docs/content/r&d/user-journeys/` with flow diagrams and prioritized technical requirements
+- `/new-api-doc` - Create a new REST API endpoint documentation page in `docs/content/r&d/apis/` with comprehensive request/response schemas, business logic flows, and examples
 
 ## Project Conventions
 
-### Issue Management
+### Issue Management and Git Workflow
 - Story issues use the template at `.github/ISSUE_TEMPLATE/story.yaml`
 - Story titles follow the format: `story(subject): short description`
 - Stories require a description and acceptance criteria
+- Branch naming convention: `story/issue-{number}/{short-description-with-dashes}`
+  - Example: `story/issue-12/docs-document-adding-content-to-a-journey`
+- Commit message format follows conventional commits: `type(scope): description`
+  - Common types: `story`, `docs`, `feat`, `fix`, `refactor`, `chore`
+  - Example: `story(issue-7): document creating a journey`
+- Main branch: `main` (used as the base for pull requests)
 
 ### Architectural Decisions
 - ADRs are stored in `docs/content/r&d/adrs/`
@@ -137,6 +152,7 @@ npm run build                  # Alternative: build via npm
 - Status values: `proposed` | `accepted` | `rejected` | `deprecated` | `superseded by ADR-XXXX`
 
 **Key Decisions:**
+- **ADR-0001** (accepted): Use MADR 4.0.0 for architectural decision records
 - **ADR-0002** (accepted): SSO Authentication Strategy - OAuth2/OIDC with external providers
 - **ADR-0003** (accepted): OAuth2/OIDC Provider Selection - Google, Facebook, and Apple
 - **ADR-0004** (accepted): Session Management - Stateless JWT-only approach (no server-side sessions)
@@ -153,6 +169,12 @@ npm run build                  # Alternative: build via npm
 - Naming convention: `NNNN-title-with-dashes.md` (zero-padded sequential numbering)
 - Priority levels help determine what must be in initial design (P0) vs. what can be phased (P1/P2)
 
+**Existing User Journeys:**
+- **0001**: User Registration - Initial account creation via OAuth2 provider
+- **0002**: User Login via SSO - Authentication flow through external providers
+- **0003**: Account Linking - Linking multiple OAuth2 providers to one account
+- **0004**: Creating a Journey - How authenticated users create new journeys
+
 ### Code Organization (for future API implementation)
 - Each endpoint should be in its own file in `api/endpoint/`
 - Endpoint registration happens in `api/app/app.go` via `endpoint.RegisterEndpoint(api)`
@@ -162,8 +184,22 @@ npm run build                  # Alternative: build via npm
 ### Documentation Organization
 - ADRs document architectural decisions following MADR 4.0.0 format
 - User journeys include Mermaid diagrams and prioritized technical requirements (P0/P1/P2)
+- API documentation follows a comprehensive template with request/response schemas, authentication requirements, business logic flows (Mermaid), error responses, and curl examples
 - Technology research documents provide analysis of potential solutions
 - All documentation includes Hugo front matter for proper site generation
+
+### API Documentation
+- API docs are stored in `docs/content/r&d/apis/`
+- Use the `/new-api-doc` command to create new API documentation
+- Naming convention based on endpoint: remove leading slash, replace `/` with `-`, add action suffix
+  - Examples: `POST /v1/journey` → `v1-journey-create.md`, `GET /v1/journey/{id}` → `v1-journey-get.md`
+- Action suffixes: POST → `-create`, GET (with params) → `-get`, GET (without params) → `-list`, PUT → `-update`, PATCH → `-patch`, DELETE → `-delete`
+- Status values: `draft` | `reviewed` | `published` | `deprecated`
+
+**Existing API Documentation:**
+- **GET /v1/auth/{provider}** - Initiate OAuth2 authentication flow with provider
+- **GET /v1/auth/{provider}/callback** - Handle OAuth2 callback from provider
+- **GET /v1/account/providers** - List OAuth2 providers linked to user account
 
 ## Authentication and Authorization Architecture
 
