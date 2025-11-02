@@ -333,15 +333,6 @@ graph TD
 - [User Journey 0001: User Registration](0001-user-registration.md) - How users initially authenticate
 - [User Journey 0002: User Login via SSO](0002-user-login-via-sso.md) - How users authenticate before uploading content
 
-**API Documentation:**
-- API documentation for content upload endpoints needs to be created, including:
-  - `POST /v1/journey/{id}/photo` - Upload a photo to a journey
-  - `POST /v1/journey/{id}/video` - Upload a video to a journey
-  - `POST /v1/journey/{id}/location` - Add a location to a journey
-  - `POST /v1/journey/{id}/route` - Upload a route to a journey
-  - `GET /v1/journey/{id}/content` - List all content in a journey
-  - `DELETE /v1/journey/{id}/content/{contentId}` - Remove content from a journey
-
 ## Notes
 
 **Future Enhancements:**
