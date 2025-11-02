@@ -31,7 +31,18 @@ stakeholders: []
 
 ## Overview
 
-[Provide a brief description of the user journey, its purpose, and the user persona(s) it serves. Explain the business value and user goals.]
+[Provide a brief description of the user journey, its purpose, and the business value it provides.]
+
+## User Personas
+
+**Primary Persona**: [Name/Role]
+- **Description**: [Who they are and their context]
+- **Goals**: [What they want to accomplish]
+- **Pain Points**: [What challenges they face]
+
+**[Additional Personas if applicable]**:
+- [Describe any variations in the user experience based on different personas]
+- [Note any persona-specific requirements or flow variations]
 
 ## Journey Flow Diagram
 
@@ -47,63 +58,64 @@ graph TD
     E --> F[Journey complete]
 ```
 
-[Provide a narrative description of the flow diagram, explaining key decision points and user actions]
+**Flow Narrative**:
 
-## Technical Requirements
+[Provide a step-by-step description of the flow diagram, explaining key decision points, user actions, and any persona-specific variations in the experience]
+
+## Requirements
 
 ### Access Control
 
 #### REQ-AC-001
 - **Priority**: P0 | P1 | P2
 - **Description**: [What access control is needed]
-- **Rationale**: [Why this is important]
-
-### Rate Limits
-
-#### REQ-RL-001
-- **Priority**: P0 | P1 | P2
-- **Description**: [What rate limiting is needed]
-- **Rationale**: [Why this is important]
+- **Rationale**: [Why this is important from a user perspective]
 
 ### Analytics
 
 #### REQ-AN-001
 - **Priority**: P0 | P1 | P2
 - **Description**: [What analytics/tracking is needed]
-- **Rationale**: [Why this is important]
-
-### Data Storage
-
-#### REQ-DS-001
-- **Priority**: P0 | P1 | P2
-- **Description**: [What data needs to be stored]
-- **Rationale**: [Why this is important]
-
-### Other Requirements
-
-#### REQ-OT-001
-- **Priority**: P0 | P1 | P2
-- **Description**: [Any other technical requirements]
-- **Rationale**: [Why this is important]
+- **Rationale**: [Why this is important for measuring user experience]
 
 ## Success Metrics
 
 [Define how success will be measured for this journey. Include both quantitative metrics (e.g., completion rate, time to complete) and qualitative metrics (e.g., user satisfaction).]
 
-- **Metric 1**: [Description and target]
-- **Metric 2**: [Description and target]
-- **Metric 3**: [Description and target]
+**Quantitative Metrics:**
+- **[Metric Name]**: [Description and target value]
+  - [What it measures]
+
+**Qualitative Metrics:**
+- **[Metric Name]**: [Description and target]
+  - [How it will be gathered]
 
 ## Related Documentation
 
-- [Link to related ADRs]
-- [Link to API documentation]
+**Existing ADRs:**
+- [Link to related ADRs that support this journey]
+
+**Required ADRs (Not Yet Created):**
+- **[ADR Topic]** - [Brief description of what needs to be decided and why it's needed for this journey]
+
+**Related User Journeys:**
 - [Link to related user journeys]
-- [Link to design mockups or wireframes]
+
+**API Documentation:**
+- [Link to API documentation if it exists, or note that it needs to be created]
 
 ## Notes
 
 [Any additional context, constraints, or considerations that don't fit in the sections above]
+
+**Future Enhancements:**
+- [Potential improvements or features for later iterations]
+
+**Technical Considerations:**
+- [Important technical factors that should inform implementation]
+
+**Business Considerations:**
+- [Business implications or opportunities related to this journey]
 ```
 
 **Status values:** `draft` | `in-review` | `approved` | `implemented` | `deprecated`
@@ -115,9 +127,6 @@ graph TD
 
 **Requirement ID format:** `REQ-[CATEGORY]-NNN`
 - `AC` = Access Control
-- `RL` = Rate Limits
 - `AN` = Analytics
-- `DS` = Data Storage
-- `OT` = Other
 
 **Reference:** Mermaid diagram syntax - https://mermaid.js.org/syntax/flowchart.html
