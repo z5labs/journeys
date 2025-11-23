@@ -1,0 +1,8 @@
+# Copyright (c) 2025 Z5labs and Contributors
+# 
+# This software is released under the MIT License.
+# https://opensource.org/licenses/MIT
+
+openapi:
+  title: Journeys OIDC Service
+  version: 0.0.0
