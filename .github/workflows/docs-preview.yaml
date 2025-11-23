@@ -1,0 +1,64 @@
+name: Docs PR Preview
+
+on:
+  pull_request:
+    types:
+      - opened
+      - reopened
+      - synchronize
+      - closed
+    paths:
+      - docs/**
+      - .github/workflows/docs-preview.yaml
+
+concurrency: preview-${{ github.ref }}
+
+jobs:
+  preview:
+    runs-on: ubuntu-latest
+    # Only run on PRs from the same repo (not forks)
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    permissions:
+      contents: write
+      pull-requests: write
+    env:
+      HUGO_VERSION: 0.152.2
+    steps:
+      - name: Checkout
+        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6
+
+      - name: Install Hugo CLI
+        if: github.event.action != 'closed'
+        run: |
+          wget -O ${{ runner.temp }}/hugo.deb https://github.com/gohugoio/hugo/releases/download/v${HUGO_VERSION}/hugo_extended_${HUGO_VERSION}_linux-amd64.deb \
+          && sudo dpkg -i ${{ runner.temp }}/hugo.deb
+
+      - name: Install Dart Sass
+        if: github.event.action != 'closed'
+        run: sudo snap install dart-sass
+
+      - name: Install docsy prerequisites
+        if: github.event.action != 'closed'
+        working-directory: ./docs
+        run: npm install -D postcss postcss-cli autoprefixer
+
+      - name: Build with Hugo
+        if: github.event.action != 'closed'
+        env:
+          HUGO_CACHEDIR: ${{ runner.temp }}/hugo_cache
+          HUGO_ENVIRONMENT: production
+          TZ: America/Los_Angeles
+        working-directory: ./docs
+        run: |
+          hugo \
+            --gc \
+            --minify \
+            --baseURL "https://z5labs.github.io/journeys/pr-preview/pr-${{ github.event.pull_request.number }}/"
+
+      - name: Deploy PR Preview
+        uses: rossjrw/pr-preview-action@8ff09e486b4c23709012eedd3b42e9f0b95dd0c5 # v1
+        with:
+          source-dir: ./docs/public
+          preview-branch: gh-pages
+          umbrella-dir: pr-preview
+          action: auto
