@@ -7,31 +7,31 @@ openapi:
   title: Journeys OIDC Service
   version: 0.0.0
 
-oauth:
-  google:
-    client_id: "YOUR_GOOGLE_CLIENT_ID"  # Set via environment variable: OAUTH_GOOGLE_CLIENT_ID
-    client_secret: "YOUR_GOOGLE_CLIENT_SECRET"  # Set via environment variable: OAUTH_GOOGLE_CLIENT_SECRET
-    auth_url: "https://accounts.google.com/o/oauth2/v2/auth"
-    token_url: "https://oauth2.googleapis.com/token"
+providers:
+  - name: google
+    client_id: {{env "OAUTH_GOOGLE_CLIENT_ID"}}
+    client_secret: {{env "OAUTH_GOOGLE_CLIENT_SECRET"}}
+    auth_url: {{env "OAUTH_GOOGLE_AUTH_URL" | default "https://accounts.google.com/o/oauth2/v2/auth"}}
+    token_url: {{env "OAUTH_GOOGLE_TOKEN_URL" | default "https://oauth2.googleapis.com/token"}}
     scopes:
-      - "openid"
-      - "profile"
-      - "email"
+      - {{env "OAUTH_GOOGLE_SCOPE_1" | default "openid"}}
+      - {{env "OAUTH_GOOGLE_SCOPE_2" | default "profile"}}
+      - {{env "OAUTH_GOOGLE_SCOPE_3" | default "email"}}
   
-  facebook:
-    client_id: "YOUR_FACEBOOK_APP_ID"  # Set via environment variable: OAUTH_FACEBOOK_CLIENT_ID
-    client_secret: "YOUR_FACEBOOK_APP_SECRET"  # Set via environment variable: OAUTH_FACEBOOK_CLIENT_SECRET
-    auth_url: "https://www.facebook.com/v12.0/dialog/oauth"
-    token_url: "https://graph.facebook.com/v12.0/oauth/access_token"
+  - name: facebook
+    client_id: {{env "OAUTH_FACEBOOK_CLIENT_ID"}}
+    client_secret: {{env "OAUTH_FACEBOOK_CLIENT_SECRET"}}
+    auth_url: {{env "OAUTH_FACEBOOK_AUTH_URL" | default "https://www.facebook.com/v12.0/dialog/oauth"}}
+    token_url: {{env "OAUTH_FACEBOOK_TOKEN_URL" | default "https://graph.facebook.com/v12.0/oauth/access_token"}}
     scopes:
-      - "public_profile"
-      - "email"
+      - {{env "OAUTH_FACEBOOK_SCOPE_1" | default "public_profile"}}
+      - {{env "OAUTH_FACEBOOK_SCOPE_2" | default "email"}}
   
-  apple:
-    client_id: "YOUR_APPLE_SERVICE_ID"  # Set via environment variable: OAUTH_APPLE_CLIENT_ID
-    client_secret: "YOUR_APPLE_CLIENT_SECRET"  # Set via environment variable: OAUTH_APPLE_CLIENT_SECRET
-    auth_url: "https://appleid.apple.com/auth/authorize"
-    token_url: "https://appleid.apple.com/auth/token"
+  - name: apple
+    client_id: {{env "OAUTH_APPLE_CLIENT_ID"}}
+    client_secret: {{env "OAUTH_APPLE_CLIENT_SECRET"}}
+    auth_url: {{env "OAUTH_APPLE_AUTH_URL" | default "https://appleid.apple.com/auth/authorize"}}
+    token_url: {{env "OAUTH_APPLE_TOKEN_URL" | default "https://appleid.apple.com/auth/token"}}
     scopes:
-      - "name"
-      - "email"
+      - {{env "OAUTH_APPLE_SCOPE_1" | default "name"}}
+      - {{env "OAUTH_APPLE_SCOPE_2" | default "email"}}

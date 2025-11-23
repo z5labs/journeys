@@ -9,7 +9,6 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/base64"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"log/slog"
@@ -17,30 +16,17 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/swaggest/jsonschema-go"
-	"github.com/swaggest/openapi-go/openapi3"
 	"github.com/z5labs/humus"
 	"github.com/z5labs/humus/rest"
+	"github.com/z5labs/humus/rest/rpc"
 )
 
-const (
-	ProviderGoogle   = "google"
-	ProviderFacebook = "facebook"
-	ProviderApple    = "apple"
-)
-
-type ProviderConfig struct {
+type providerConfig struct {
 	ClientID     string
 	ClientSecret string
 	AuthURL      string
 	TokenURL     string
 	Scopes       []string
-}
-
-type OAuthConfig struct {
-	Google   ProviderConfig
-	Facebook   ProviderConfig
-	Apple    ProviderConfig
 }
 
 type AuthProviderResponse struct {
@@ -53,78 +39,67 @@ type AuthProviderResponse struct {
 }
 
 type authProviderHandler struct {
-	log   *slog.Logger
-	oauth OAuthConfig
+	log       *slog.Logger
+	providers map[string]providerConfig
 }
 
-func RegisterAuthProviderGetEndpoint(oauth OAuthConfig) rest.ApiOption {
+type AuthProviderOption func(*authProviderHandler)
+
+func WithProvider(name, clientID, clientSecret, authURL, tokenURL string, scopes []string) AuthProviderOption {
+	return func(h *authProviderHandler) {
+		h.providers[name] = providerConfig{
+			ClientID:     clientID,
+			ClientSecret: clientSecret,
+			AuthURL:      authURL,
+			TokenURL:     tokenURL,
+			Scopes:       scopes,
+		}
+	}
+}
+
+func RegisterAuthProviderGetEndpoint(opts ...AuthProviderOption) rest.ApiOption {
 	h := &authProviderHandler{
-		log:   humus.Logger("auth.provider.get"),
-		oauth: oauth,
+		log:       humus.Logger("auth.provider.get"),
+		providers: make(map[string]providerConfig),
+	}
+	
+	for _, opt := range opts {
+		opt(h)
 	}
 	
 	return rest.Handle(
 		http.MethodGet,
 		rest.BasePath("/v1/auth").Param("provider"),
-		h,
+		rpc.ProduceJson(h),
 		rest.QueryParam("redirect_uri", rest.Required()),
 		rest.QueryParam("state"),
 	)
 }
 
-func (h *authProviderHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
+func (h *authProviderHandler) Produce(ctx context.Context) (*AuthProviderResponse, error) {
+	provider := rest.PathParamValue(ctx, "provider")
 	
-	provider := r.PathValue("provider")
-	redirectURI := r.URL.Query().Get("redirect_uri")
-	state := r.URL.Query().Get("state")
+	redirectURIVals := rest.QueryParamValue(ctx, "redirect_uri")
+	var redirectURI string
+	if len(redirectURIVals) > 0 {
+		redirectURI = redirectURIVals[0]
+	}
+	
+	stateVals := rest.QueryParamValue(ctx, "state")
+	var state string
+	if len(stateVals) > 0 {
+		state = stateVals[0]
+	}
 	
 	h.log.InfoContext(ctx, "handling auth provider request", "provider", provider)
 	
 	resp, err := h.handle(ctx, provider, redirectURI, state)
 	if err != nil {
 		h.log.ErrorContext(ctx, "failed to handle request", "error", err)
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
+		return nil, err
 	}
 	
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	
-	if err := json.NewEncoder(w).Encode(resp); err != nil {
-		h.log.ErrorContext(ctx, "failed to encode response", "error", err)
-	}
-}
-
-func (h *authProviderHandler) RequestBody() openapi3.RequestBodyOrRef {
-	return openapi3.RequestBodyOrRef{}
-}
-
-func (h *authProviderHandler) Responses() openapi3.Responses {
-	var resp AuthProviderResponse
-	var reflector jsonschema.Reflector
-
-	jsonSchema, err := reflector.Reflect(resp, jsonschema.InlineRefs)
-	if err != nil {
-		return openapi3.Responses{}
-	}
-
-	var schemaOrRef openapi3.SchemaOrRef
-	schemaOrRef.FromJSONSchema(jsonSchema.ToSchemaOrBool())
-
-	return openapi3.Responses{
-		MapOfResponseOrRefValues: map[string]openapi3.ResponseOrRef{
-			"200": {
-				Response: &openapi3.Response{
-					Content: map[string]openapi3.MediaType{
-						"application/json": {
-							Schema: &schemaOrRef,
-						},
-					},
-				},
-			},
-		},
-	}
+	return resp, nil
 }
 
 func (h *authProviderHandler) handle(ctx context.Context, provider, redirectURI, state string) (*AuthProviderResponse, error) {
@@ -181,27 +156,20 @@ func (h *authProviderHandler) handle(ctx context.Context, provider, redirectURI,
 func (h *authProviderHandler) validateProvider(provider string) error {
 	provider = strings.ToLower(provider)
 	
-	switch provider {
-	case ProviderGoogle, ProviderFacebook, ProviderApple:
-		return nil
-	default:
+	if _, ok := h.providers[provider]; !ok {
 		return NewInvalidProviderError(provider)
 	}
+	return nil
 }
 
-func (h *authProviderHandler) getProviderConfig(provider string) (ProviderConfig, error) {
+func (h *authProviderHandler) getProviderConfig(provider string) (providerConfig, error) {
 	provider = strings.ToLower(provider)
 	
-	switch provider {
-	case ProviderGoogle:
-		return h.oauth.Google, nil
-	case ProviderFacebook:
-		return h.oauth.Facebook, nil
-	case ProviderApple:
-		return h.oauth.Apple, nil
-	default:
-		return ProviderConfig{}, NewInvalidProviderError(provider)
+	cfg, ok := h.providers[provider]
+	if !ok {
+		return providerConfig{}, NewInvalidProviderError(provider)
 	}
+	return cfg, nil
 }
 
 func validateRedirectURI(redirectURI string) error {
@@ -231,7 +199,7 @@ func generateState() (string, error) {
 	return base64.URLEncoding.WithPadding(base64.NoPadding).EncodeToString(b), nil
 }
 
-func buildAuthorizationURL(cfg ProviderConfig, redirectURI, state string) (string, error) {
+func buildAuthorizationURL(cfg providerConfig, redirectURI, state string) (string, error) {
 	if cfg.AuthURL == "" {
 		return "", errors.New("provider auth_url not configured")
 	}

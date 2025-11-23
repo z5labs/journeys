@@ -15,13 +15,13 @@ import (
 )
 
 func TestValidateProvider(t *testing.T) {
-	oauth := OAuthConfig{
-		Google:   ProviderConfig{ClientID: "google-client"},
-		Facebook: ProviderConfig{ClientID: "fb-client"},
-		Apple:    ProviderConfig{ClientID: "apple-client"},
+	h := &authProviderHandler{
+		providers: map[string]providerConfig{
+			"google":   {ClientID: "google-client"},
+			"facebook": {ClientID: "fb-client"},
+			"apple":    {ClientID: "apple-client"},
+		},
 	}
-	
-	h := &authProviderHandler{oauth: oauth}
 	
 	tests := []struct {
 		name      string
@@ -160,7 +160,7 @@ func TestValidateRedirectURI(t *testing.T) {
 func TestBuildAuthorizationURL(t *testing.T) {
 	tests := []struct {
 		name        string
-		cfg         ProviderConfig
+		cfg         providerConfig
 		redirectURI string
 		state       string
 		wantErr     bool
@@ -168,7 +168,7 @@ func TestBuildAuthorizationURL(t *testing.T) {
 	}{
 		{
 			name: "google provider",
-			cfg: ProviderConfig{
+			cfg: providerConfig{
 				ClientID: "google-client-id",
 				AuthURL:  "https://accounts.google.com/o/oauth2/v2/auth",
 				Scopes:   []string{"openid", "profile", "email"},
@@ -206,7 +206,7 @@ func TestBuildAuthorizationURL(t *testing.T) {
 		},
 		{
 			name: "facebook provider",
-			cfg: ProviderConfig{
+			cfg: providerConfig{
 				ClientID: "fb-app-id",
 				AuthURL:  "https://www.facebook.com/v12.0/dialog/oauth",
 				Scopes:   []string{"public_profile", "email"},
@@ -228,7 +228,7 @@ func TestBuildAuthorizationURL(t *testing.T) {
 		},
 		{
 			name: "apple provider",
-			cfg: ProviderConfig{
+			cfg: providerConfig{
 				ClientID: "com.example.app",
 				AuthURL:  "https://appleid.apple.com/auth/authorize",
 				Scopes:   []string{"name", "email"},
@@ -250,7 +250,7 @@ func TestBuildAuthorizationURL(t *testing.T) {
 		},
 		{
 			name: "missing auth URL",
-			cfg: ProviderConfig{
+			cfg: providerConfig{
 				ClientID: "client-id",
 				AuthURL:  "",
 				Scopes:   []string{"openid"},
@@ -277,22 +277,22 @@ func TestBuildAuthorizationURL(t *testing.T) {
 }
 
 func TestAuthProviderHandler_handle(t *testing.T) {
-	oauth := OAuthConfig{
-		Google: ProviderConfig{
+	providers := map[string]providerConfig{
+		"google": {
 			ClientID:     "google-client-id",
 			ClientSecret: "google-secret",
 			AuthURL:      "https://accounts.google.com/o/oauth2/v2/auth",
 			TokenURL:     "https://oauth2.googleapis.com/token",
 			Scopes:       []string{"openid", "profile", "email"},
 		},
-		Facebook: ProviderConfig{
+		"facebook": {
 			ClientID:     "fb-app-id",
 			ClientSecret: "fb-secret",
 			AuthURL:      "https://www.facebook.com/v12.0/dialog/oauth",
 			TokenURL:     "https://graph.facebook.com/v12.0/oauth/access_token",
 			Scopes:       []string{"public_profile", "email"},
 		},
-		Apple: ProviderConfig{
+		"apple": {
 			ClientID:     "com.example.app",
 			ClientSecret: "apple-secret",
 			AuthURL:      "https://appleid.apple.com/auth/authorize",
@@ -395,8 +395,8 @@ func TestAuthProviderHandler_handle(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			h := &authProviderHandler{
-				oauth: oauth,
-				log:   humus.Logger("test"),
+				providers: providers,
+				log:       humus.Logger("test"),
 			}
 			
 			ctx := context.Background()

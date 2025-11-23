@@ -13,6 +13,7 @@ import (
 )
 
 type ProviderConfig struct {
+	Name         string   `config:"name"`
 	ClientID     string   `config:"client_id"`
 	ClientSecret string   `config:"client_secret"`
 	AuthURL      string   `config:"auth_url"`
@@ -20,43 +21,25 @@ type ProviderConfig struct {
 	Scopes       []string `config:"scopes"`
 }
 
-type OAuthConfig struct {
-	Google   ProviderConfig `config:"google"`
-	Facebook ProviderConfig `config:"facebook"`
-	Apple    ProviderConfig `config:"apple"`
-}
-
 type Config struct {
 	rest.Config `config:",squash"`
-	OAuth       OAuthConfig `config:"oauth"`
+	Providers   []ProviderConfig `config:"providers"`
 }
 
 func Init(ctx context.Context, cfg Config) (*rest.Api, error) {
-	oauthCfg := endpoint.OAuthConfig{
-		Google: endpoint.ProviderConfig{
-			ClientID:     cfg.OAuth.Google.ClientID,
-			ClientSecret: cfg.OAuth.Google.ClientSecret,
-			AuthURL:      cfg.OAuth.Google.AuthURL,
-			TokenURL:     cfg.OAuth.Google.TokenURL,
-			Scopes:       cfg.OAuth.Google.Scopes,
-		},
-		Facebook: endpoint.ProviderConfig{
-			ClientID:     cfg.OAuth.Facebook.ClientID,
-			ClientSecret: cfg.OAuth.Facebook.ClientSecret,
-			AuthURL:      cfg.OAuth.Facebook.AuthURL,
-			TokenURL:     cfg.OAuth.Facebook.TokenURL,
-			Scopes:       cfg.OAuth.Facebook.Scopes,
-		},
-		Apple: endpoint.ProviderConfig{
-			ClientID:     cfg.OAuth.Apple.ClientID,
-			ClientSecret: cfg.OAuth.Apple.ClientSecret,
-			AuthURL:      cfg.OAuth.Apple.AuthURL,
-			TokenURL:     cfg.OAuth.Apple.TokenURL,
-			Scopes:       cfg.OAuth.Apple.Scopes,
-		},
+	var opts []endpoint.AuthProviderOption
+	for _, provider := range cfg.Providers {
+		opts = append(opts, endpoint.WithProvider(
+			provider.Name,
+			provider.ClientID,
+			provider.ClientSecret,
+			provider.AuthURL,
+			provider.TokenURL,
+			provider.Scopes,
+		))
 	}
 	
-	operation := endpoint.RegisterAuthProviderGetEndpoint(oauthCfg)
+	operation := endpoint.RegisterAuthProviderGetEndpoint(opts...)
 	
 	api := rest.NewApi(
 		cfg.OpenApi.Title,

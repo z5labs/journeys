@@ -22,7 +22,7 @@ type ErrorResponse struct {
 }
 
 func NewInvalidProviderError(provider string) error {
-	return fmt.Errorf("%w: provider '%s' is not supported. Valid providers: google, facebook, apple", ErrInvalidProvider, provider)
+	return fmt.Errorf("%w: provider '%s' is not supported", ErrInvalidProvider, provider)
 }
 
 func NewMissingParameterError(param string) error {
