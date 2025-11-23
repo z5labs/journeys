@@ -6,3 +6,32 @@
 openapi:
   title: Journeys OIDC Service
   version: 0.0.0
+
+oauth:
+  google:
+    client_id: "YOUR_GOOGLE_CLIENT_ID"  # Set via environment variable: OAUTH_GOOGLE_CLIENT_ID
+    client_secret: "YOUR_GOOGLE_CLIENT_SECRET"  # Set via environment variable: OAUTH_GOOGLE_CLIENT_SECRET
+    auth_url: "https://accounts.google.com/o/oauth2/v2/auth"
+    token_url: "https://oauth2.googleapis.com/token"
+    scopes:
+      - "openid"
+      - "profile"
+      - "email"
+  
+  facebook:
+    client_id: "YOUR_FACEBOOK_APP_ID"  # Set via environment variable: OAUTH_FACEBOOK_CLIENT_ID
+    client_secret: "YOUR_FACEBOOK_APP_SECRET"  # Set via environment variable: OAUTH_FACEBOOK_CLIENT_SECRET
+    auth_url: "https://www.facebook.com/v12.0/dialog/oauth"
+    token_url: "https://graph.facebook.com/v12.0/oauth/access_token"
+    scopes:
+      - "public_profile"
+      - "email"
+  
+  apple:
+    client_id: "YOUR_APPLE_SERVICE_ID"  # Set via environment variable: OAUTH_APPLE_CLIENT_ID
+    client_secret: "YOUR_APPLE_CLIENT_SECRET"  # Set via environment variable: OAUTH_APPLE_CLIENT_SECRET
+    auth_url: "https://appleid.apple.com/auth/authorize"
+    token_url: "https://appleid.apple.com/auth/token"
+    scopes:
+      - "name"
+      - "email"
