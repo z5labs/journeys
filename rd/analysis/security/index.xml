@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Security on Journeys</title><link>https://z5labs.github.io/journeys/rd/analysis/security/</link><description>Recent content in Security on Journeys</description><generator>Hugo</generator><language>en-us</language><lastBuildDate>Sun, 02 Nov 2025 00:00:00 +0000</lastBuildDate><atom:link href="https://z5labs.github.io/journeys/rd/analysis/security/index.xml" rel="self" type="application/rss+xml"/><item><title>OAuth State and PKCE Storage Alternatives</title><link>https://z5labs.github.io/journeys/rd/analysis/security/pkce/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://z5labs.github.io/journeys/rd/analysis/security/pkce/</guid><description>&lt;h2 id="overview"&gt;Overview&lt;/h2&gt;
+&lt;p&gt;This document analyzes alternatives to Redis for storing OAuth state parameters and PKCE (Proof Key for Code Exchange) values during OAuth 2.0 authorization flows. The analysis evaluates trade-offs between different storage mechanisms to inform implementation decisions for user authentication flows.&lt;/p&gt;
+&lt;h2 id="why-oauth-state-and-pkce-need-temporary-storage"&gt;Why OAuth State and PKCE Need Temporary Storage&lt;/h2&gt;
+&lt;h3 id="data-requirements"&gt;Data Requirements&lt;/h3&gt;
+&lt;p&gt;During OAuth authorization flows, the following data must be temporarily stored:&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;OAuth State Parameter:&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Random value for CSRF protection (must match between initiation and callback)&lt;/li&gt;
+&lt;li&gt;Original destination URL for post-login redirect&lt;/li&gt;
+&lt;li&gt;Session context (registration vs. login flow)&lt;/li&gt;
+&lt;li&gt;Generated in &lt;code&gt;/v1/auth/{provider}&lt;/code&gt;, validated in &lt;code&gt;/v1/auth/{provider}/callback&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;strong&gt;PKCE Values:&lt;/strong&gt;&lt;/p&gt;</description></item><item><title>Mobile OAuth Security Considerations</title><link>https://z5labs.github.io/journeys/rd/analysis/security/mobile-oauth/</link><pubDate>Sun, 02 Nov 2025 00:00:00 +0000</pubDate><guid>https://z5labs.github.io/journeys/rd/analysis/security/mobile-oauth/</guid><description>&lt;h2 id="overview"&gt;Overview&lt;/h2&gt;
+&lt;p&gt;This document analyzes the security requirements and best practices for implementing OAuth 2.0 authentication in native mobile applications (iOS and Android). Mobile apps have different security characteristics compared to web applications, requiring specific patterns to prevent authorization code interception, token theft, and other mobile-specific attack vectors.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Key Standard&lt;/strong&gt;: &lt;a href="https://www.rfc-editor.org/rfc/rfc8252.html"&gt;RFC 8252 - OAuth 2.0 for Native Apps&lt;/a&gt; (October 2017)&lt;/p&gt;
+&lt;h2 id="why-mobile-apps-need-special-handling"&gt;Why Mobile Apps Need Special Handling&lt;/h2&gt;
+&lt;p&gt;Mobile applications face unique security challenges that don&amp;rsquo;t apply to traditional web applications:&lt;/p&gt;</description></item></channel></rss>
