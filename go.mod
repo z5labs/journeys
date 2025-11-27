@@ -2,7 +2,11 @@ module github.com/z5labs/journeys
 
 go 1.25.4
 
-require github.com/z5labs/humus v0.13.0
+require (
+	github.com/dgraph-io/dgo/v240 v240.2.0
+	github.com/z5labs/humus v0.14.0
+	google.golang.org/grpc v1.77.0
+)
 
 require (
 	github.com/cenkalti/backoff/v5 v5.0.3 // indirect
@@ -13,6 +17,7 @@ require (
 	github.com/go-viper/mapstructure/v2 v2.4.0 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.27.3 // indirect
+	github.com/pkg/errors v0.9.1 // indirect
 	github.com/swaggest/jsonschema-go v0.3.79 // indirect
 	github.com/swaggest/openapi-go v0.2.60 // indirect
 	github.com/swaggest/refl v1.4.0 // indirect
@@ -41,9 +46,8 @@ require (
 	golang.org/x/sync v0.18.0 // indirect
 	golang.org/x/sys v0.38.0 // indirect
 	golang.org/x/text v0.31.0 // indirect
-	google.golang.org/genproto/googleapis/api v0.0.0-20251111163417-95abcf5c77ba // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20251111163417-95abcf5c77ba // indirect
-	google.golang.org/grpc v1.76.0 // indirect
+	google.golang.org/genproto/googleapis/api v0.0.0-20251124214823-79d6a2a48846 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20251124214823-79d6a2a48846 // indirect
 	google.golang.org/protobuf v1.36.10 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect

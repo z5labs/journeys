@@ -29,6 +29,9 @@ openapi:
   title: Proof of Concept
   version: v0.0.0
 
+dgraph:
+  address: {{env "DGRAPH_ADDRESS" | default "localhost:9080"}}
+
 minio:
   endpoint: {{env "MINIO_ENDPOINT" | default "localhost:9000"}}
   access_key: {{env "MINIO_ACCESS_KEY" | default "minioadmin"}}

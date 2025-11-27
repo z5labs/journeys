@@ -11,6 +11,7 @@ services:
       - "8080:8080"   # POC REST API
     environment:
       - OTEL_OTLP_TARGET=otel-collector:4317
+      - DGRAPH_ADDRESS=dgraph:9080
       - MINIO_ENDPOINT=minio:9000
       - MINIO_ACCESS_KEY=minioadmin
       - MINIO_SECRET_KEY=minioadmin
