@@ -1,5 +1,6 @@
 ---
 title: "htmx Data Transfer Analysis"
+type: docs
 linkTitle: "htmx Data Transfer"
 weight: 10
 description: >
