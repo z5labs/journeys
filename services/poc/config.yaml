@@ -1,8 +1,39 @@
-# Copyright (c) 2025 Z5labs and Contributors
+# Copyright (c) 2025 Z5Labs and Contributors
 # 
 # This software is released under the MIT License.
 # https://opensource.org/licenses/MIT
 
+otel:
+  resource:
+    service_name: journeys-poc
+  trace:
+    exporter:
+      type: {{env "OTEL_TRACE_EXPORTER" | default "otlp"}}
+      otlp:
+        type: grpc
+        target: {{env "OTEL_OTLP_TARGET" | default "localhost:4317"}}
+  metric:
+    exporter:
+      type: {{env "OTEL_METRIC_EXPORTER" | default "otlp"}}
+      otlp:
+        type: grpc
+        target: {{env "OTEL_OTLP_TARGET" | default "localhost:4317"}}
+  log:
+    exporter:
+      type: {{env "OTEL_LOG_EXPORTER" | default "otlp"}}
+      otlp:
+        type: grpc
+        target: {{env "OTEL_OTLP_TARGET" | default "localhost:4317"}}
+
 openapi:
-  title: Proof of Concept Service API
+  title: Proof of Concept
   version: v0.0.0
+
+http:
+  port: {{env "HTTP_PORT" | default "8090"}}
+
+minio:
+  endpoint: {{env "MINIO_ENDPOINT" | default "localhost:9000"}}
+  access_key: {{env "MINIO_ACCESS_KEY" | default "minioadmin"}}
+  secret_key: {{env "MINIO_SECRET_KEY" | default "minioadmin"}}
+  bucket: {{env "MINIO_BUCKET" | default "onebrc"}}
