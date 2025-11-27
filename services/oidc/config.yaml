@@ -1,0 +1,37 @@
+# Copyright (c) 2025 Z5labs and Contributors
+# 
+# This software is released under the MIT License.
+# https://opensource.org/licenses/MIT
+
+openapi:
+  title: Journeys OIDC Service
+  version: 0.0.0
+
+providers:
+  - name: google
+    client_id: {{env "OAUTH_GOOGLE_CLIENT_ID"}}
+    client_secret: {{env "OAUTH_GOOGLE_CLIENT_SECRET"}}
+    auth_url: {{env "OAUTH_GOOGLE_AUTH_URL" | default "https://accounts.google.com/o/oauth2/v2/auth"}}
+    token_url: {{env "OAUTH_GOOGLE_TOKEN_URL" | default "https://oauth2.googleapis.com/token"}}
+    scopes:
+      - {{env "OAUTH_GOOGLE_SCOPE_1" | default "openid"}}
+      - {{env "OAUTH_GOOGLE_SCOPE_2" | default "profile"}}
+      - {{env "OAUTH_GOOGLE_SCOPE_3" | default "email"}}
+  
+  - name: facebook
+    client_id: {{env "OAUTH_FACEBOOK_CLIENT_ID"}}
+    client_secret: {{env "OAUTH_FACEBOOK_CLIENT_SECRET"}}
+    auth_url: {{env "OAUTH_FACEBOOK_AUTH_URL" | default "https://www.facebook.com/v12.0/dialog/oauth"}}
+    token_url: {{env "OAUTH_FACEBOOK_TOKEN_URL" | default "https://graph.facebook.com/v12.0/oauth/access_token"}}
+    scopes:
+      - {{env "OAUTH_FACEBOOK_SCOPE_1" | default "public_profile"}}
+      - {{env "OAUTH_FACEBOOK_SCOPE_2" | default "email"}}
+  
+  - name: apple
+    client_id: {{env "OAUTH_APPLE_CLIENT_ID"}}
+    client_secret: {{env "OAUTH_APPLE_CLIENT_SECRET"}}
+    auth_url: {{env "OAUTH_APPLE_AUTH_URL" | default "https://appleid.apple.com/auth/authorize"}}
+    token_url: {{env "OAUTH_APPLE_TOKEN_URL" | default "https://appleid.apple.com/auth/token"}}
+    scopes:
+      - {{env "OAUTH_APPLE_SCOPE_1" | default "name"}}
+      - {{env "OAUTH_APPLE_SCOPE_2" | default "email"}}
