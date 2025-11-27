@@ -29,9 +29,6 @@ openapi:
   title: Proof of Concept
   version: v0.0.0
 
-http:
-  port: {{env "HTTP_PORT" | default "8090"}}
-
 minio:
   endpoint: {{env "MINIO_ENDPOINT" | default "localhost:9000"}}
   access_key: {{env "MINIO_ACCESS_KEY" | default "minioadmin"}}

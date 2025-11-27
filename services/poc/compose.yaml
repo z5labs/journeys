@@ -1,6 +1,38 @@
 version: '3.8'
 
 services:
+  # POC Service - Journey tracking REST API
+  poc:
+    build:
+      context: ../../
+      dockerfile: ./services/poc/Dockerfile
+    container_name: poc
+    ports:
+      - "8080:8080"   # POC REST API
+    environment:
+      - OTEL_OTLP_TARGET=otel-collector:4317
+      - MINIO_ENDPOINT=minio:9000
+      - MINIO_ACCESS_KEY=minioadmin
+      - MINIO_SECRET_KEY=minioadmin
+      - MINIO_BUCKET=onebrc
+    networks:
+      - otel-net
+    depends_on:
+      - otel-collector
+      - minio
+      - dgraph
+
+  dgraph:
+    image: docker.io/dgraph/standalone:latest
+    container_name: dgraph
+    ports:
+      - "8008:8080"   # Dgraph Ratel UI
+      - "9080:9080"   # Dgraph gRPC
+    volumes:
+      - dgraph-data:/dgraph
+    networks:
+      - otel-net
+
   # Minio - S3-compatible object storage
   minio:
     image: docker.io/minio/minio:latest
@@ -59,7 +91,7 @@ services:
       - ./compose-configs/mimir-config.yaml:/etc/mimir-config.yaml:z
       - mimir-data:/tmp/mimir
     ports:
-      - "8080:8080"   # Mimir HTTP (Prometheus compatible)
+      - "9009:8080"   # Mimir HTTP (Prometheus compatible)
       - "9095:9095"   # Mimir gRPC (Prometheus Remote Write)
     networks:
       - otel-net
@@ -108,6 +140,8 @@ volumes:
   loki-data:
     driver: local
   grafana-data:
+    driver: local
+  dgraph-data:
     driver: local
 
 networks:

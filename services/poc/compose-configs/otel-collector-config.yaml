@@ -59,7 +59,7 @@ exporters:
 
   # Export metrics to Mimir via OTLP (recommended)
   otlphttp/mimir:
-    endpoint: http://mimir:8080/otlp
+    endpoint: http://mimir:9009/otlp
 
   # Export logs to Loki via OTLP HTTP
   otlphttp/loki:
