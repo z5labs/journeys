@@ -1,0 +1,8 @@
+# Copyright (c) 2025 Z5labs and Contributors
+# 
+# This software is released under the MIT License.
+# https://opensource.org/licenses/MIT
+
+openapi:
+  title: Proof of Concept Service API
+  version: v0.0.0
