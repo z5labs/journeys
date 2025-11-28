@@ -13,6 +13,8 @@ import (
 	"fmt"
 	"html/template"
 	"io"
+	"log/slog"
+	"math"
 	"mime/multipart"
 	"net/http"
 	"path/filepath"
@@ -24,7 +26,9 @@ import (
 	"github.com/dgraph-io/dgo/v240"
 	"github.com/dgraph-io/dgo/v240/protos/api"
 	"github.com/google/uuid"
+	"github.com/rwcarlsen/goexif/exif"
 	"github.com/swaggest/openapi-go/openapi3"
+	"github.com/z5labs/humus"
 	"github.com/z5labs/humus/rest"
 )
 
@@ -43,17 +47,71 @@ var allowedMimeTypes = map[string]bool{
 	"video/quicktime": true,
 }
 
+type GeoMetadata struct {
+	Latitude   *float64
+	Longitude  *float64
+	Altitude   *float64
+	CapturedAt *time.Time
+}
+
+func extractGeoMetadata(fileData []byte, mimeType string) (*GeoMetadata, error) {
+	log := humus.Logger("upload")
+	meta := &GeoMetadata{}
+
+	if !strings.HasPrefix(mimeType, "image/") {
+		log.Info("skipping geo extraction for non-image", slog.String("mime_type", mimeType))
+		return meta, nil
+	}
+
+	reader := bytes.NewReader(fileData)
+	exifData, err := exif.Decode(reader)
+	if err != nil {
+		log.Info("no exif data found or decode error", slog.String("error", err.Error()))
+		return meta, nil
+	}
+
+	lat, lon, err := exifData.LatLong()
+	if err == nil && !math.IsNaN(lat) && !math.IsNaN(lon) {
+		meta.Latitude = &lat
+		meta.Longitude = &lon
+		log.Info("extracted GPS coordinates", slog.Float64("lat", lat), slog.Float64("lon", lon))
+	} else if err != nil {
+		log.Info("no GPS coordinates in exif", slog.String("error", err.Error()))
+	} else {
+		log.Info("invalid GPS coordinates (NaN) in exif")
+	}
+
+	if altTag, err := exifData.Get(exif.GPSAltitude); err == nil {
+		if alt, err := altTag.Float(0); err == nil && !math.IsNaN(alt) {
+			meta.Altitude = &alt
+			log.Info("extracted altitude", slog.Float64("altitude", alt))
+		}
+	}
+
+	if dtTag, err := exifData.DateTime(); err == nil {
+		meta.CapturedAt = &dtTag
+		log.Info("extracted capture datetime", slog.Time("captured_at", dtTag))
+	}
+
+	return meta, nil
+}
+
 type contentNode struct {
-	UID         string    `json:"uid,omitempty"`
-	DType       []string  `json:"dgraph.type"`
-	ContentID   string    `json:"content.id"`
-	Type        string    `json:"content.type"`
-	MinioKey    string    `json:"content.minio_key"`
-	Title       string    `json:"content.title"`
-	Description string    `json:"content.description"`
-	UploadedAt  time.Time `json:"content.uploaded_at"`
-	FileSize    int64     `json:"content.file_size"`
-	MimeType    string    `json:"content.mime_type"`
+	UID          string     `json:"uid,omitempty"`
+	DType        []string   `json:"dgraph.type"`
+	ContentID    string     `json:"content.id"`
+	Type         string     `json:"content.type"`
+	MinioKey     string     `json:"content.minio_key"`
+	Title        string     `json:"content.title"`
+	Description  string     `json:"content.description"`
+	UploadedAt   time.Time  `json:"content.uploaded_at"`
+	FileSize     int64      `json:"content.file_size"`
+	MimeType     string     `json:"content.mime_type"`
+	Latitude     *float64   `json:"content.latitude,omitempty"`
+	Longitude    *float64   `json:"content.longitude,omitempty"`
+	Altitude     *float64   `json:"content.altitude,omitempty"`
+	LocationName string     `json:"content.location_name,omitempty"`
+	CapturedAt   *time.Time `json:"content.captured_at,omitempty"`
 }
 
 type UploadContentRequest struct {
@@ -197,22 +255,37 @@ func (h *uploadContentHandler) uploadSingleFile(ctx context.Context, req *Upload
 		return fmt.Errorf("failed to upload to MinIO: %w", err)
 	}
 
+	geoMeta, _ := extractGeoMetadata(fileData, contentType)
+
+	log := humus.Logger("upload")
+	if geoMeta.Latitude != nil && geoMeta.Longitude != nil {
+		log.Info("storing content with geolocation",
+			slog.Float64("lat", *geoMeta.Latitude),
+			slog.Float64("lon", *geoMeta.Longitude))
+	} else {
+		log.Info("storing content without geolocation")
+	}
+
 	contentTitle := req.Title
 	if contentTitle == "" {
 		contentTitle = fileHeader.Filename
 	}
 
 	node := &contentNode{
-		UID:         "_:content",
-		DType:       []string{"Content"},
-		ContentID:   contentID,
-		Type:        req.Type,
-		MinioKey:    minioKey,
-		Title:       contentTitle,
-		Description: req.Description,
-		UploadedAt:  time.Now().UTC(),
-		FileSize:    fileHeader.Size,
-		MimeType:    contentType,
+		UID:          "_:content",
+		DType:        []string{"Content"},
+		ContentID:    contentID,
+		Type:         req.Type,
+		MinioKey:     minioKey,
+		Title:        contentTitle,
+		Description:  req.Description,
+		UploadedAt:   time.Now().UTC(),
+		FileSize:     fileHeader.Size,
+		MimeType:     contentType,
+		Latitude:     geoMeta.Latitude,
+		Longitude:    geoMeta.Longitude,
+		Altitude:     geoMeta.Altitude,
+		CapturedAt:   geoMeta.CapturedAt,
 	}
 
 	jsonData, err := json.Marshal(node)
@@ -245,14 +318,19 @@ func (h *uploadContentHandler) uploadSingleFile(ctx context.Context, req *Upload
 	}
 
 	contentModel := Content{
-		ID:          contentID,
-		Type:        req.Type,
-		MinioKey:    minioKey,
-		Title:       contentTitle,
-		Description: req.Description,
-		UploadedAt:  time.Now().UTC(),
-		FileSize:    fileHeader.Size,
-		MimeType:    contentType,
+		ID:           contentID,
+		Type:         req.Type,
+		MinioKey:     minioKey,
+		Title:        contentTitle,
+		Description:  req.Description,
+		UploadedAt:   time.Now().UTC(),
+		FileSize:     fileHeader.Size,
+		MimeType:     contentType,
+		Latitude:     geoMeta.Latitude,
+		Longitude:    geoMeta.Longitude,
+		Altitude:     geoMeta.Altitude,
+		LocationName: "",
+		CapturedAt:   geoMeta.CapturedAt,
 	}
 
 	if err := h.template.Execute(htmlFragments, contentModel); err != nil {

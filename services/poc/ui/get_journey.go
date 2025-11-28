@@ -66,6 +66,11 @@ func (h *getJourneyHandler) Handle(ctx context.Context, req *rest.EmptyRequest) 
 				content.uploaded_at
 				content.file_size
 				content.mime_type
+				content.latitude
+				content.longitude
+				content.altitude
+				content.location_name
+				content.captured_at
 			}
 		}
 	}
@@ -86,14 +91,19 @@ func (h *getJourneyHandler) Handle(ctx context.Context, req *rest.EmptyRequest) 
 			ID       string `json:"journey.id"`
 			Title    string `json:"journey.title"`
 			Contents []struct {
-				ID          string    `json:"content.id"`
-				Type        string    `json:"content.type"`
-				MinioKey    string    `json:"content.minio_key"`
-				Title       string    `json:"content.title"`
-				Description string    `json:"content.description"`
-				UploadedAt  time.Time `json:"content.uploaded_at"`
-				FileSize    int64     `json:"content.file_size"`
-				MimeType    string    `json:"content.mime_type"`
+				ID           string     `json:"content.id"`
+				Type         string     `json:"content.type"`
+				MinioKey     string     `json:"content.minio_key"`
+				Title        string     `json:"content.title"`
+				Description  string     `json:"content.description"`
+				UploadedAt   time.Time  `json:"content.uploaded_at"`
+				FileSize     int64      `json:"content.file_size"`
+				MimeType     string     `json:"content.mime_type"`
+				Latitude     *float64   `json:"content.latitude"`
+				Longitude    *float64   `json:"content.longitude"`
+				Altitude     *float64   `json:"content.altitude"`
+				LocationName string     `json:"content.location_name"`
+				CapturedAt   *time.Time `json:"content.captured_at"`
 			} `json:"journey.content"`
 		} `json:"journey"`
 	}
@@ -110,14 +120,19 @@ func (h *getJourneyHandler) Handle(ctx context.Context, req *rest.EmptyRequest) 
 	contents := make([]Content, len(j.Contents))
 	for i, c := range j.Contents {
 		contents[i] = Content{
-			ID:          c.ID,
-			Type:        c.Type,
-			MinioKey:    c.MinioKey,
-			Title:       c.Title,
-			Description: c.Description,
-			UploadedAt:  c.UploadedAt,
-			FileSize:    c.FileSize,
-			MimeType:    c.MimeType,
+			ID:           c.ID,
+			Type:         c.Type,
+			MinioKey:     c.MinioKey,
+			Title:        c.Title,
+			Description:  c.Description,
+			UploadedAt:   c.UploadedAt,
+			FileSize:     c.FileSize,
+			MimeType:     c.MimeType,
+			Latitude:     c.Latitude,
+			Longitude:    c.Longitude,
+			Altitude:     c.Altitude,
+			LocationName: c.LocationName,
+			CapturedAt:   c.CapturedAt,
 		}
 	}
 

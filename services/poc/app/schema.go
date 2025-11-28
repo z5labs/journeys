@@ -22,6 +22,11 @@ type Content {
 	content.uploaded_at: datetime
 	content.file_size: int
 	content.mime_type: string
+	content.latitude: float
+	content.longitude: float
+	content.altitude: float
+	content.location_name: string
+	content.captured_at: datetime
 }
 
 journey.id: string @index(exact) .
@@ -36,4 +41,9 @@ content.description: string .
 content.uploaded_at: datetime .
 content.file_size: int .
 content.mime_type: string .
+content.latitude: float .
+content.longitude: float .
+content.altitude: float .
+content.location_name: string .
+content.captured_at: datetime .
 `

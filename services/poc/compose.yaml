@@ -35,6 +35,16 @@ services:
       - dgraph-data:/dgraph
     networks:
       - otel-net
+  
+  dgraph-ratel:
+    image: docker.io/dgraph/ratel:latest
+    container_name: dgraph-ratel
+    ports:
+      - "8000:8000"   # Dgraph Ratel UI
+    networks:
+      - otel-net
+    depends_on:
+      - dgraph
 
   # Minio - S3-compatible object storage
   minio:

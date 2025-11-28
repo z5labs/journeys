@@ -13,7 +13,29 @@
         {{if .Description}}
             <p style="margin: 0.5rem 0; color: #666;">{{.Description}}</p>
         {{end}}
-        <time style="font-size: 0.875rem; color: #999;">{{.UploadedAt.Format "2006-01-02 15:04:05"}}</time>
+        
+        {{if and .Latitude .Longitude}}
+        <div class="geo-info" style="margin: 0.5rem 0; padding: 0.5rem; background: #f5f5f5; border-radius: 4px;">
+            <p style="margin: 0.25rem 0; font-size: 0.875rem;">
+                📍 Location: {{printf "%.6f" .Latitude}}, {{printf "%.6f" .Longitude}}
+                {{if .Altitude}}({{printf "%.1f" .Altitude}}m){{end}}
+            </p>
+            {{if .LocationName}}
+            <p style="margin: 0.25rem 0; font-size: 0.875rem; color: #666;">{{.LocationName}}</p>
+            {{end}}
+            <a href="https://www.google.com/maps?q={{.Latitude}},{{.Longitude}}" 
+               target="_blank" 
+               style="font-size: 0.875rem; color: #0066cc;">View on Map</a>
+        </div>
+        {{end}}
+        
+        {{if .CapturedAt}}
+        <time style="font-size: 0.875rem; color: #999;">
+            Captured: {{.CapturedAt.Format "2006-01-02 15:04:05"}}
+        </time>
+        <br>
+        {{end}}
+        <time style="font-size: 0.875rem; color: #999;">Uploaded: {{.UploadedAt.Format "2006-01-02 15:04:05"}}</time>
         <p style="font-size: 0.875rem; color: #999;">Size: {{.FileSize}} bytes</p>
     </div>
 </div>
