@@ -8,12 +8,12 @@ package app
 import (
 	"context"
 
-	"github.com/z5labs/journeys/services/poc/endpoint"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
+	"github.com/z5labs/journeys/services/poc/ui"
 
 	"github.com/dgraph-io/dgo/v240"
 	"github.com/z5labs/humus/rest"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
 type Config struct {
@@ -38,7 +38,10 @@ func Init(ctx context.Context, cfg Config) (*rest.Api, error) {
 	api := rest.NewApi(
 		cfg.OpenApi.Title,
 		cfg.OpenApi.Version,
-		endpoint.NewJourney(dgraph),
+		ui.GetJourneys(dgraph),
+		ui.GetJourneyForm(dgraph),
+		ui.CancelJourneyForm(dgraph),
+		ui.CreateJourney(dgraph),
 	)
 
 	return api, nil

@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Journeys</title>
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+</head>
+<body>
+    <h1>My Journeys</h1>
+
+    <!-- Container for create button/form swap -->
+    <div id="create-journey-container">
+        {{template "create_journey_button.html"}}
+    </div>
+
+    <!-- Journey list - new items prepended here -->
+    <div id="journeys-list">
+        {{range .Journeys}}
+        {{template "journey_item.html" .}}
+        {{end}}
+    </div>
+</body>
+</html>
