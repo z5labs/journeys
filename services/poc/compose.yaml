@@ -27,7 +27,7 @@ services:
     image: docker.io/dgraph/standalone:latest
     container_name: dgraph
     ports:
-      - "8008:8080"   # Dgraph Ratel UI
+      - "8000:8000"   # Dgraph Ratel UI
       - "9080:9080"   # Dgraph gRPC
     volumes:
       - dgraph-data:/dgraph

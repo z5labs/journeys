@@ -105,9 +105,9 @@ func (r *UploadContentRequest) Spec() (openapi3.RequestBodyOrRef, error) {
 }
 
 type uploadContentHandler struct {
-	dgraph      *dgo.Dgraph
-	minio       *storage.MinioClient
-	template    *template.Template
+	dgraph   *dgo.Dgraph
+	minio    *storage.MinioClient
+	template *template.Template
 }
 
 func UploadContent(dgraph *dgo.Dgraph, minio *storage.MinioClient) rest.ApiOption {
@@ -136,7 +136,7 @@ func (h *uploadContentHandler) Handle(ctx context.Context, req *UploadContentReq
 		}
 	}`
 
-	vars := map[string]string{"journeyID": req.JourneyID}
+	vars := map[string]string{"$journeyID": req.JourneyID}
 	resp, err := h.dgraph.NewReadOnlyTxn().QueryWithVars(ctx, query, vars)
 	if err != nil {
 		return nil, fmt.Errorf("failed to query journey: %w", err)
@@ -164,6 +164,8 @@ func (h *uploadContentHandler) Handle(ctx context.Context, req *UploadContentReq
 			return nil, err
 		}
 	}
+
+	htmlFragments.WriteString(`<div id="content-form-modal" hx-swap-oob="innerHTML"></div>`)
 
 	return &HtmlResponse{
 		ContentType: "text/html; charset=utf-8",
