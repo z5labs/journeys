@@ -267,6 +267,13 @@ func TestGetJourney_Success_WithContent(t *testing.T) {
 	assert.Contains(t, bodyStr, "Bridge Timelapse")
 	assert.Contains(t, bodyStr, "photo-1")
 	assert.Contains(t, bodyStr, "video-1")
+
+	// Verify section headers appear
+	assert.Contains(t, bodyStr, "Unknown Date") // for video-1 without CapturedAt
+
+	// Verify date section appears (capturedAt was yesterday)
+	yesterday := time.Now().Add(-24 * time.Hour).UTC().Format("2006-01-02")
+	assert.Contains(t, bodyStr, yesterday)
 }
 
 func TestGetJourney_Success_NoContent(t *testing.T) {
@@ -401,4 +408,128 @@ func TestGetJourney_EmptyID(t *testing.T) {
 
 	// Assertions - should return error
 	assert.NotEqual(t, http.StatusOK, resp.StatusCode)
+}
+
+// Helper for tests
+func ptrTime(t time.Time) *time.Time {
+	return &t
+}
+
+func TestGroupContentByDate(t *testing.T) {
+	tests := []struct {
+		name     string
+		contents []Content
+		want     []ContentSection
+	}{
+		{
+			name:     "empty content",
+			contents: []Content{},
+			want:     []ContentSection{},
+		},
+		{
+			name: "all content without CapturedAt",
+			contents: []Content{
+				{ID: "1", Title: "Photo 1", UploadedAt: time.Date(2025, 1, 15, 10, 0, 0, 0, time.UTC)},
+				{ID: "2", Title: "Photo 2", UploadedAt: time.Date(2025, 1, 15, 11, 0, 0, 0, time.UTC)},
+			},
+			want: []ContentSection{
+				{
+					DateKey:     "Unknown",
+					DisplayDate: "Unknown Date",
+					SortOrder:   -9223372036854775807,
+					Contents: []Content{
+						{ID: "1", Title: "Photo 1", UploadedAt: time.Date(2025, 1, 15, 10, 0, 0, 0, time.UTC)},
+						{ID: "2", Title: "Photo 2", UploadedAt: time.Date(2025, 1, 15, 11, 0, 0, 0, time.UTC)},
+					},
+				},
+			},
+		},
+		{
+			name: "content grouped by two different dates",
+			contents: []Content{
+				{ID: "1", CapturedAt: ptrTime(time.Date(2025, 1, 15, 10, 30, 0, 0, time.UTC))},
+				{ID: "2", CapturedAt: ptrTime(time.Date(2025, 1, 15, 14, 0, 0, 0, time.UTC))},
+				{ID: "3", CapturedAt: ptrTime(time.Date(2025, 1, 16, 9, 0, 0, 0, time.UTC))},
+			},
+			want: []ContentSection{
+				{
+					DateKey:     "2025-01-16",
+					DisplayDate: "2025-01-16",
+					Contents:    []Content{{ID: "3", CapturedAt: ptrTime(time.Date(2025, 1, 16, 9, 0, 0, 0, time.UTC))}},
+				},
+				{
+					DateKey:     "2025-01-15",
+					DisplayDate: "2025-01-15",
+					Contents: []Content{
+						{ID: "1", CapturedAt: ptrTime(time.Date(2025, 1, 15, 10, 30, 0, 0, time.UTC))},
+						{ID: "2", CapturedAt: ptrTime(time.Date(2025, 1, 15, 14, 0, 0, 0, time.UTC))},
+					},
+				},
+			},
+		},
+		{
+			name: "mixed: unknown date appears first",
+			contents: []Content{
+				{ID: "1", CapturedAt: ptrTime(time.Date(2025, 1, 15, 10, 0, 0, 0, time.UTC))},
+				{ID: "2", CapturedAt: nil, UploadedAt: time.Date(2025, 1, 15, 12, 0, 0, 0, time.UTC)},
+				{ID: "3", CapturedAt: ptrTime(time.Date(2025, 1, 16, 10, 0, 0, 0, time.UTC))},
+			},
+			want: []ContentSection{
+				{
+					DateKey:     "Unknown",
+					DisplayDate: "Unknown Date",
+					SortOrder:   -9223372036854775807,
+					Contents:    []Content{{ID: "2", CapturedAt: nil, UploadedAt: time.Date(2025, 1, 15, 12, 0, 0, 0, time.UTC)}},
+				},
+				{
+					DateKey:     "2025-01-16",
+					DisplayDate: "2025-01-16",
+					Contents:    []Content{{ID: "3", CapturedAt: ptrTime(time.Date(2025, 1, 16, 10, 0, 0, 0, time.UTC))}},
+				},
+				{
+					DateKey:     "2025-01-15",
+					DisplayDate: "2025-01-15",
+					Contents:    []Content{{ID: "1", CapturedAt: ptrTime(time.Date(2025, 1, 15, 10, 0, 0, 0, time.UTC))}},
+				},
+			},
+		},
+		{
+			name: "within section sorting: earliest to latest",
+			contents: []Content{
+				{ID: "1", CapturedAt: ptrTime(time.Date(2025, 1, 15, 14, 0, 0, 0, time.UTC))},
+				{ID: "2", CapturedAt: ptrTime(time.Date(2025, 1, 15, 9, 0, 0, 0, time.UTC))},
+				{ID: "3", CapturedAt: ptrTime(time.Date(2025, 1, 15, 12, 0, 0, 0, time.UTC))},
+			},
+			want: []ContentSection{
+				{
+					DateKey:     "2025-01-15",
+					DisplayDate: "2025-01-15",
+					Contents: []Content{
+						{ID: "2", CapturedAt: ptrTime(time.Date(2025, 1, 15, 9, 0, 0, 0, time.UTC))},   // 9:00
+						{ID: "3", CapturedAt: ptrTime(time.Date(2025, 1, 15, 12, 0, 0, 0, time.UTC))}, // 12:00
+						{ID: "1", CapturedAt: ptrTime(time.Date(2025, 1, 15, 14, 0, 0, 0, time.UTC))}, // 14:00
+					},
+				},
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := groupContentByDate(tt.contents)
+
+			assert.Equal(t, len(tt.want), len(got), "section count mismatch")
+
+			for i := range tt.want {
+				assert.Equal(t, tt.want[i].DateKey, got[i].DateKey, "DateKey mismatch at section %d", i)
+				assert.Equal(t, tt.want[i].DisplayDate, got[i].DisplayDate, "DisplayDate mismatch at section %d", i)
+				assert.Equal(t, len(tt.want[i].Contents), len(got[i].Contents), "Contents count mismatch at section %d", i)
+
+				// Verify content IDs in correct order
+				for j := range tt.want[i].Contents {
+					assert.Equal(t, tt.want[i].Contents[j].ID, got[i].Contents[j].ID, "Content ID mismatch at section %d, item %d", i, j)
+				}
+			}
+		})
+	}
 }

@@ -10,7 +10,7 @@
         {{if eq .Type "photo"}}
             <img src="/app/content/{{.ID}}/preview" alt="{{.Title}}" style="max-width: 100%; height: auto; border-radius: 4px;">
         {{else}}
-            <video style="max-width: 100%; height: auto; border-radius: 4px; pointer-events: none;">
+            <video controls style="max-width: 100%; height: auto; border-radius: 4px;" onclick="event.stopPropagation();">
                 <source src="/app/content/{{.ID}}/preview" type="{{.MimeType}}">
                 Your browser does not support the video tag.
             </video>

@@ -13,6 +13,7 @@ import (
 	"fmt"
 	"html/template"
 	"net/http"
+	"sort"
 	"time"
 
 	"github.com/dgraph-io/dgo/v240"
@@ -44,6 +45,81 @@ func GetJourney(dgraph *dgo.Dgraph) rest.ApiOption {
 		rest.BasePath("/app/journey").Param("id"),
 		h,
 	)
+}
+
+// groupContentByDate groups and sorts content by captured date
+func groupContentByDate(contents []Content) []ContentSection {
+	// Map to accumulate content by date key
+	sectionMap := make(map[string]*ContentSection)
+
+	for _, content := range contents {
+		var dateKey string
+		var displayDate string
+		var sortOrder int64
+
+		if content.CapturedAt == nil {
+			dateKey = "Unknown"
+			displayDate = "Unknown Date"
+			sortOrder = -9223372036854775807 // Very negative to sort first
+		} else {
+			// Normalize to UTC date for grouping
+			utcDate := content.CapturedAt.UTC()
+			dateKey = utcDate.Format("2006-01-02")
+			displayDate = dateKey
+			// Use negative timestamp for descending sort (newer dates have less negative values)
+			sortOrder = -time.Date(
+				utcDate.Year(), utcDate.Month(), utcDate.Day(),
+				0, 0, 0, 0, time.UTC,
+			).Unix()
+		}
+
+		// Get or create section
+		section, exists := sectionMap[dateKey]
+		if !exists {
+			section = &ContentSection{
+				DateKey:     dateKey,
+				DisplayDate: displayDate,
+				SortOrder:   sortOrder,
+				Contents:    []Content{},
+			}
+			sectionMap[dateKey] = section
+		}
+
+		section.Contents = append(section.Contents, content)
+	}
+
+	// Convert map to slice
+	sections := make([]ContentSection, 0, len(sectionMap))
+	for _, section := range sectionMap {
+		// Sort contents within section by time (earliest to latest)
+		sort.Slice(section.Contents, func(i, j int) bool {
+			a, b := section.Contents[i], section.Contents[j]
+
+			// Items with CapturedAt come before those without
+			if a.CapturedAt == nil && b.CapturedAt != nil {
+				return false
+			}
+			if a.CapturedAt != nil && b.CapturedAt == nil {
+				return true
+			}
+			if a.CapturedAt == nil && b.CapturedAt == nil {
+				// Both nil: sort by upload time
+				return a.UploadedAt.Before(b.UploadedAt)
+			}
+
+			// Both have CapturedAt: sort by captured time
+			return a.CapturedAt.Before(*b.CapturedAt)
+		})
+
+		sections = append(sections, *section)
+	}
+
+	// Sort sections by SortOrder (Unknown=0 first, then negative timestamps)
+	sort.Slice(sections, func(i, j int) bool {
+		return sections[i].SortOrder < sections[j].SortOrder
+	})
+
+	return sections
 }
 
 func (h *getJourneyHandler) Handle(ctx context.Context, req *rest.EmptyRequest) (*HtmlResponse, error) {
@@ -136,14 +212,18 @@ func (h *getJourneyHandler) Handle(ctx context.Context, req *rest.EmptyRequest) 
 		}
 	}
 
-	journeyModel := journey{
+	// Group content by date
+	sections := groupContentByDate(contents)
+
+	// Create view model
+	viewModel := journeyViewModel{
 		ID:       j.ID,
 		Title:    j.Title,
-		Contents: contents,
+		Sections: sections,
 	}
 
 	var buf bytes.Buffer
-	err = h.template.Execute(&buf, journeyModel)
+	err = h.template.Execute(&buf, viewModel)
 	if err != nil {
 		return nil, fmt.Errorf("failed to render template: %w", err)
 	}

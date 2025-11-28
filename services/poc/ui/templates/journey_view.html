@@ -36,28 +36,38 @@
 
         <h2>Content</h2>
         <div id="content-gallery">
-            {{range .Contents}}
-                <a href="/app/content/{{.ID}}" hx-boost="true" style="text-decoration: none; color: inherit; display: block;">
-                    <div class="content-item" data-content-id="{{.ID}}" style="margin: 1rem 0; padding: 1rem; border: 1px solid #ddd; border-radius: 4px; cursor: pointer; transition: box-shadow 0.2s, transform 0.1s;">
-                        {{if eq .Type "photo"}}
-                            <img src="/app/content/{{.ID}}/preview" alt="{{.Title}}" style="max-width: 100%; height: auto; border-radius: 4px; pointer-events: none;">
-                        {{else}}
-                            <video controls style="max-width: 100%; height: auto; border-radius: 4px;" onclick="event.stopPropagation();">
-                                <source src="/app/content/{{.ID}}/preview" type="{{.MimeType}}">
-                                Your browser does not support the video tag.
-                            </video>
-                        {{end}}
+            {{if .Sections}}
+                {{range .Sections}}
+                    <div class="date-section" style="margin: 2rem 0;">
+                        <h3 style="margin: 1rem 0; padding-bottom: 0.5rem; border-bottom: 2px solid #ddd; color: #333;">
+                            {{.DisplayDate}}
+                        </h3>
 
-                        <div class="content-meta" style="margin-top: 0.5rem;">
-                            <h3 style="margin: 0.5rem 0;">{{.Title}}</h3>
-                            {{if .Description}}
-                                <p style="margin: 0.5rem 0; color: #666;">{{.Description}}</p>
-                            {{end}}
-                            <time style="font-size: 0.875rem; color: #999;">{{.UploadedAt.Format "2006-01-02 15:04:05"}}</time>
-                            <p style="font-size: 0.875rem; color: #999;">Size: {{.FileSize}} bytes</p>
-                        </div>
+                        {{range .Contents}}
+                            <a href="/app/content/{{.ID}}" hx-boost="true" style="text-decoration: none; color: inherit; display: block;">
+                                <div class="content-item" data-content-id="{{.ID}}" style="margin: 1rem 0; padding: 1rem; border: 1px solid #ddd; border-radius: 4px; cursor: pointer; transition: box-shadow 0.2s, transform 0.1s;">
+                                    {{if eq .Type "photo"}}
+                                        <img src="/app/content/{{.ID}}/preview" alt="{{.Title}}" style="max-width: 100%; height: auto; border-radius: 4px; pointer-events: none;">
+                                    {{else}}
+                                        <video controls style="max-width: 100%; height: auto; border-radius: 4px;" onclick="event.stopPropagation();">
+                                            <source src="/app/content/{{.ID}}/preview" type="{{.MimeType}}">
+                                            Your browser does not support the video tag.
+                                        </video>
+                                    {{end}}
+
+                                    <div class="content-meta" style="margin-top: 0.5rem;">
+                                        <h3 style="margin: 0.5rem 0;">{{.Title}}</h3>
+                                        {{if .Description}}
+                                            <p style="margin: 0.5rem 0; color: #666;">{{.Description}}</p>
+                                        {{end}}
+                                        <time style="font-size: 0.875rem; color: #999;">{{.UploadedAt.Format "2006-01-02 15:04:05"}}</time>
+                                        <p style="font-size: 0.875rem; color: #999;">Size: {{.FileSize}} bytes</p>
+                                    </div>
+                                </div>
+                            </a>
+                        {{end}}
                     </div>
-                </a>
+                {{end}}
             {{else}}
                 <p style="color: #999; font-style: italic;">No content yet. Click "Add Content" to upload photos or videos.</p>
             {{end}}

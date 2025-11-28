@@ -99,8 +99,17 @@ type streamResponse struct {
 
 func (r *streamResponse) WriteResponse(ctx context.Context, w http.ResponseWriter) error {
 	defer r.reader.Close()
+
+	// Set headers first
 	w.Header().Set("Content-Type", r.contentType)
 	w.Header().Set("Content-Length", fmt.Sprintf("%d", r.contentLength))
+	w.Header().Set("Accept-Ranges", "bytes")
+
+	// Explicitly write the status code before copying the body
+	// This prevents OpenTelemetry middleware from calling WriteHeader multiple times
+	w.WriteHeader(http.StatusOK)
+
+	// Copy the content to the response
 	_, err := io.Copy(w, r.reader)
 	return err
 }
