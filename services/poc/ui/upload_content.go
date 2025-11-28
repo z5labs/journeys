@@ -168,7 +168,26 @@ type uploadContentHandler struct {
 }
 
 func UploadContent(dgraph *dgo.Dgraph, minio *storage.MinioClient) rest.ApiOption {
-	tmpl, err := template.New("content_item.html").Parse(contentItemTemplate)
+	tmpl, err := template.New("content_item.html").Funcs(template.FuncMap{
+		"deref": func(ptr interface{}) interface{} {
+			if ptr == nil {
+				return nil
+			}
+			switch v := ptr.(type) {
+			case *float64:
+				if v == nil {
+					return nil
+				}
+				return *v
+			case *int:
+				if v == nil {
+					return nil
+				}
+				return *v
+			}
+			return ptr
+		},
+	}).Parse(contentItemTemplate)
 	if err != nil {
 		panic(err)
 	}

@@ -43,14 +43,14 @@
                 {{if and .Content.Latitude .Content.Longitude}}
                 <div class="geo-info" style="padding: 1rem; background: #f5f5f5; border-radius: 8px;">
                     <p style="margin: 0.5rem 0; font-size: 1rem;">
-                        📍 {{printf "%.6f" .Content.Latitude}}, {{printf "%.6f" .Content.Longitude}}
-                        {{if .Content.Altitude}}({{printf "%.1f" .Content.Altitude}}m){{end}}
+                        📍 {{printf "%.6f" (deref .Content.Latitude)}}, {{printf "%.6f" (deref .Content.Longitude)}}
+                        {{if .Content.Altitude}}({{printf "%.1f" (deref .Content.Altitude)}}m){{end}}
                     </p>
                     {{if .Content.LocationName}}
                     <p style="margin: 0.5rem 0; font-size: 0.875rem; color: #666;">{{.Content.LocationName}}</p>
                     {{end}}
                     <div style="display: flex; gap: 0.75rem; margin-top: 0.75rem;">
-                        <a href="https://www.google.com/maps?q={{.Content.Latitude}},{{.Content.Longitude}}"
+                        <a href="https://www.google.com/maps?q={{deref .Content.Latitude}},{{deref .Content.Longitude}}"
                            target="_blank"
                            style="padding: 0.5rem 1rem; background: #4285f4; color: white; text-decoration: none; border-radius: 4px; font-size: 0.875rem;">
                             View on Google Maps

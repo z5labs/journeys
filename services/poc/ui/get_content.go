@@ -29,7 +29,26 @@ type getContentHandler struct {
 
 // GetContent creates a REST operation for viewing a single content item by ID
 func GetContent(dgraph *dgo.Dgraph) rest.ApiOption {
-	tmpl, err := template.New("content_view.html").Parse(contentViewTemplate)
+	tmpl, err := template.New("content_view.html").Funcs(template.FuncMap{
+		"deref": func(ptr interface{}) interface{} {
+			if ptr == nil {
+				return nil
+			}
+			switch v := ptr.(type) {
+			case *float64:
+				if v == nil {
+					return nil
+				}
+				return *v
+			case *int:
+				if v == nil {
+					return nil
+				}
+				return *v
+			}
+			return ptr
+		},
+	}).Parse(contentViewTemplate)
 	if err != nil {
 		panic(err)
 	}

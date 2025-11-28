@@ -5,6 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{.Title}} - Journeys</title>
     <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <style>
+        .content-item:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            transform: translateY(-2px);
+        }
+        .content-item:active {
+            transform: translateY(0);
+        }
+    </style>
 </head>
 <body>
     <nav>
@@ -28,25 +37,27 @@
         <h2>Content</h2>
         <div id="content-gallery">
             {{range .Contents}}
-                <div class="content-item" data-content-id="{{.ID}}" style="margin: 1rem 0; padding: 1rem; border: 1px solid #ddd; border-radius: 4px;">
-                    {{if eq .Type "photo"}}
-                        <img src="/app/content/{{.ID}}/preview" alt="{{.Title}}" style="max-width: 100%; height: auto; border-radius: 4px;">
-                    {{else}}
-                        <video controls style="max-width: 100%; height: auto; border-radius: 4px;">
-                            <source src="/app/content/{{.ID}}/preview" type="{{.MimeType}}">
-                            Your browser does not support the video tag.
-                        </video>
-                    {{end}}
-                    
-                    <div class="content-meta" style="margin-top: 0.5rem;">
-                        <h3 style="margin: 0.5rem 0;">{{.Title}}</h3>
-                        {{if .Description}}
-                            <p style="margin: 0.5rem 0; color: #666;">{{.Description}}</p>
+                <a href="/app/content/{{.ID}}" hx-boost="true" style="text-decoration: none; color: inherit; display: block;">
+                    <div class="content-item" data-content-id="{{.ID}}" style="margin: 1rem 0; padding: 1rem; border: 1px solid #ddd; border-radius: 4px; cursor: pointer; transition: box-shadow 0.2s, transform 0.1s;">
+                        {{if eq .Type "photo"}}
+                            <img src="/app/content/{{.ID}}/preview" alt="{{.Title}}" style="max-width: 100%; height: auto; border-radius: 4px; pointer-events: none;">
+                        {{else}}
+                            <video controls style="max-width: 100%; height: auto; border-radius: 4px;" onclick="event.stopPropagation();">
+                                <source src="/app/content/{{.ID}}/preview" type="{{.MimeType}}">
+                                Your browser does not support the video tag.
+                            </video>
                         {{end}}
-                        <time style="font-size: 0.875rem; color: #999;">{{.UploadedAt.Format "2006-01-02 15:04:05"}}</time>
-                        <p style="font-size: 0.875rem; color: #999;">Size: {{.FileSize}} bytes</p>
+
+                        <div class="content-meta" style="margin-top: 0.5rem;">
+                            <h3 style="margin: 0.5rem 0;">{{.Title}}</h3>
+                            {{if .Description}}
+                                <p style="margin: 0.5rem 0; color: #666;">{{.Description}}</p>
+                            {{end}}
+                            <time style="font-size: 0.875rem; color: #999;">{{.UploadedAt.Format "2006-01-02 15:04:05"}}</time>
+                            <p style="font-size: 0.875rem; color: #999;">Size: {{.FileSize}} bytes</p>
+                        </div>
                     </div>
-                </div>
+                </a>
             {{else}}
                 <p style="color: #999; font-style: italic;">No content yet. Click "Add Content" to upload photos or videos.</p>
             {{end}}

@@ -25,8 +25,8 @@
             {{if and .Latitude .Longitude}}
             <div class="geo-info" style="margin: 0.5rem 0; padding: 0.5rem; background: #f5f5f5; border-radius: 4px;">
                 <p style="margin: 0.25rem 0; font-size: 0.875rem;">
-                    📍 {{printf "%.6f" .Latitude}}, {{printf "%.6f" .Longitude}}
-                    {{if .Altitude}}({{printf "%.1f" .Altitude}}m){{end}}
+                    📍 {{printf "%.6f" (deref .Latitude)}}, {{printf "%.6f" (deref .Longitude)}}
+                    {{if .Altitude}}({{printf "%.1f" (deref .Altitude)}}m){{end}}
                 </p>
                 {{if .LocationName}}
                 <p style="margin: 0.25rem 0; font-size: 0.875rem; color: #666;">{{.LocationName}}</p>
