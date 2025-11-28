@@ -4,7 +4,7 @@ go 1.25.4
 
 require (
 	github.com/dgraph-io/dgo/v240 v240.2.0
-	github.com/z5labs/humus v0.14.0
+	github.com/z5labs/humus v0.14.1
 	google.golang.org/grpc v1.77.0
 )
 

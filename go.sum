@@ -59,6 +59,8 @@ github.com/z5labs/bedrock v0.20.2 h1:Br88Vj4Pl9/El/F+bcy2bQR30Se3WaX0pzTe9/sBsHs
 github.com/z5labs/bedrock v0.20.2/go.mod h1:m08IIkkl2JIGJPF4qthDAJ9b8tNGnpx8g46xaf0fWDE=
 github.com/z5labs/humus v0.14.0 h1:ncuq3V965Y56iBgPcclxz+tcbW4JNX0TeS2rBXWgeMo=
 github.com/z5labs/humus v0.14.0/go.mod h1:xwQgd6ytn5wNVY1FipjUrsuqwUsvs2diyoZOxKNG7bE=
+github.com/z5labs/humus v0.14.1 h1:yMGdLJXS8vMa3Ytu1MmUS/tvg7aEy1z+OaO90NHmYoU=
+github.com/z5labs/humus v0.14.1/go.mod h1:xwQgd6ytn5wNVY1FipjUrsuqwUsvs2diyoZOxKNG7bE=
 github.com/z5labs/sdk-go v0.2.0 h1:mAkp64/6EMiu2fB4tcwd1p5lFNTLW/crI0nxWWXe53I=
 github.com/z5labs/sdk-go v0.2.0/go.mod h1:ycKynder4tJl3TkkeQHpI4yvogt0eQLwFWXlWALNptY=
 go.opentelemetry.io/auto/sdk v1.2.1 h1:jXsnJ4Lmnqd11kwkBV2LgLoFMZKizbCi5fNZ/ipaZ64=

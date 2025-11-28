@@ -11,6 +11,7 @@ import (
 	"github.com/z5labs/journeys/services/poc/ui"
 
 	"github.com/dgraph-io/dgo/v240"
+	"github.com/dgraph-io/dgo/v240/protos/api"
 	"github.com/z5labs/humus/rest"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -35,10 +36,16 @@ func Init(ctx context.Context, cfg Config) (*rest.Api, error) {
 		return nil, err
 	}
 
+	// Apply schema with indexes
+	if err := dgraph.Alter(ctx, &api.Operation{Schema: dgraphSchema}); err != nil {
+		return nil, err
+	}
+
 	api := rest.NewApi(
 		cfg.OpenApi.Title,
 		cfg.OpenApi.Version,
 		ui.GetJourneys(dgraph),
+		ui.GetJourney(dgraph),
 		ui.GetJourneyForm(dgraph),
 		ui.CancelJourneyForm(dgraph),
 		ui.CreateJourney(dgraph),

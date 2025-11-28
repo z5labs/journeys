@@ -96,13 +96,17 @@ func (h *getJourneysHandler) Handle(ctx context.Context, req *rest.EmptyRequest)
 		return nil, err
 	}
 
-	// Convert to journey slice
-	journeys := make([]journey, len(result.Journeys))
-	for i, j := range result.Journeys {
-		journeys[i] = journey{
+	// Convert to journey slice, filtering out entries with missing IDs
+	journeys := make([]journey, 0, len(result.Journeys))
+	for _, j := range result.Journeys {
+		// Skip journeys without an ID (data integrity issue)
+		if j.ID == "" {
+			continue
+		}
+		journeys = append(journeys, journey{
 			ID:    j.ID,
 			Title: j.Title,
-		}
+		})
 	}
 
 	// Prepare template data
