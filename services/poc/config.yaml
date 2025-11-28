@@ -22,7 +22,7 @@ otel:
         target: {{env "OTEL_OTLP_TARGET" | default "localhost:4317"}}
   log:
     exporter:
-      type: {{env "OTEL_LOG_EXPORTER" | default "otlp"}}
+      type: {{env "OTEL_LOG_EXPORTER" | default "stdout"}}
       otlp:
         type: grpc
         target: {{env "OTEL_OTLP_TARGET" | default "localhost:4317"}}

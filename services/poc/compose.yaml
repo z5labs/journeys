@@ -12,6 +12,7 @@ services:
     volumes:
       - poc-tmp:/tmp
     environment:
+      - OTEL_LOG_EXPORTER=otlp
       - OTEL_OTLP_TARGET=otel-collector:4317
       - DGRAPH_ADDRESS=dgraph:9080
       - MINIO_ENDPOINT=minio:9000

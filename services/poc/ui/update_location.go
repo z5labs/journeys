@@ -24,6 +24,9 @@ import (
 	"github.com/z5labs/humus/rest"
 )
 
+//go:embed templates/location_section.html
+var locationSectionTemplate string
+
 type UpdateLocationRequest struct {
 	ContentID string
 	Latitude  *float64
@@ -103,7 +106,26 @@ type updateLocationHandler struct {
 }
 
 func UpdateLocation(dgraph *dgo.Dgraph) rest.ApiOption {
-	tmpl, err := template.New("content_item.html").Parse(contentItemTemplate)
+	tmpl, err := template.New("location_section.html").Funcs(template.FuncMap{
+		"deref": func(ptr interface{}) interface{} {
+			if ptr == nil {
+				return nil
+			}
+			switch v := ptr.(type) {
+			case *float64:
+				if v == nil {
+					return nil
+				}
+				return *v
+			case *int:
+				if v == nil {
+					return nil
+				}
+				return *v
+			}
+			return ptr
+		},
+	}).Parse(locationSectionTemplate)
 	if err != nil {
 		panic(err)
 	}

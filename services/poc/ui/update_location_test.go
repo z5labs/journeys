@@ -98,7 +98,9 @@ func TestUpdateLocation_Success_SetLocation(t *testing.T) {
 	// Assertions
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 	assert.Equal(t, "text/html; charset=utf-8", resp.Header.Get("Content-Type"))
-	assert.Contains(t, bodyStr, "Beach Photo")
+	assert.Contains(t, bodyStr, "34.052200") // Latitude in formatted output
+	assert.Contains(t, bodyStr, "-118.243700") // Longitude in formatted output
+	assert.Contains(t, bodyStr, "100.5") // Altitude in output
 
 	// Verify location was updated in Dgraph
 	query := `{
