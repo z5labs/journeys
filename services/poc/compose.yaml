@@ -35,7 +35,7 @@ services:
       - dgraph-data:/dgraph
     networks:
       - otel-net
-  
+
   dgraph-ratel:
     image: docker.io/dgraph/ratel:latest
     container_name: dgraph-ratel

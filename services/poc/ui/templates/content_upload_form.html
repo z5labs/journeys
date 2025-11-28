@@ -1,12 +1,71 @@
+<style>
+    .upload-progress-container {
+        margin-top: 1rem;
+        display: none;
+    }
+
+    .upload-progress-container.active {
+        display: block;
+    }
+
+    .progress-bar {
+        width: 100%;
+        height: 30px;
+        background-color: #f0f0f0;
+        border-radius: 15px;
+        overflow: hidden;
+        position: relative;
+        margin-bottom: 10px;
+    }
+
+    .progress-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #007bff, #0056b3);
+        width: 0%;
+        transition: width 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: bold;
+        font-size: 14px;
+    }
+
+    .progress-details {
+        text-align: center;
+        color: #666;
+        font-size: 14px;
+    }
+
+    .upload-status {
+        text-align: center;
+        padding: 10px;
+        margin-top: 15px;
+        border-radius: 4px;
+        display: none;
+    }
+
+    .upload-status.active {
+        display: block;
+    }
+
+    .upload-status.error {
+        background-color: #f2dede;
+        color: #a94442;
+        border: 1px solid #ebccd1;
+    }
+</style>
+
 <div class="modal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center;">
     <div style="background: white; padding: 2rem; border-radius: 8px; max-width: 500px; width: 90%;">
-        <form hx-post="/app/journey/{{.JourneyID}}/content"
+        <form id="upload-form"
+              hx-post="/app/journey/{{.JourneyID}}/content"
               hx-encoding="multipart/form-data"
               hx-target="#content-gallery"
               hx-swap="beforeend">
-            
+
             <h2>Add Content</h2>
-            
+
             <div style="margin: 1rem 0;">
                 <label style="margin-right: 1rem;">
                     <input type="radio" name="type" value="photo" checked> Photo
@@ -15,41 +74,55 @@
                     <input type="radio" name="type" value="video"> Video
                 </label>
             </div>
-            
+
             <div style="margin: 1rem 0;">
                 <label for="files">Files:</label>
-                <input type="file" 
+                <input type="file"
                        id="files"
-                       name="files" 
-                       multiple 
+                       name="files"
+                       multiple
                        accept="image/*,video/*"
                        required
                        style="display: block; margin-top: 0.5rem;">
             </div>
-            
+
             <div style="margin: 1rem 0;">
                 <label for="title">Title (optional):</label>
-                <input type="text" 
+                <input type="text"
                        id="title"
-                       name="title" 
+                       name="title"
                        placeholder="Title"
                        style="width: 100%; padding: 0.5rem; margin-top: 0.5rem;">
             </div>
-            
+
             <div style="margin: 1rem 0;">
                 <label for="description">Description (optional):</label>
                 <textarea id="description"
-                          name="description" 
+                          name="description"
                           placeholder="Description"
                           rows="4"
                           style="width: 100%; padding: 0.5rem; margin-top: 0.5rem;"></textarea>
             </div>
-            
+
+            <!-- Progress Bar -->
+            <div id="progress-container" class="upload-progress-container">
+                <div class="progress-bar">
+                    <div id="progress-fill" class="progress-fill" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"></div>
+                </div>
+                <div class="progress-details">
+                    <div id="progress-text">0%</div>
+                    <div id="speed-text"></div>
+                </div>
+            </div>
+
+            <!-- Status Messages -->
+            <div id="upload-status" class="upload-status"></div>
+
             <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
-                <button type="submit" style="flex: 1; padding: 0.75rem; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                <button id="submit-btn" type="submit" style="flex: 1; padding: 0.75rem; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">
                     Upload
                 </button>
-                <button type="button" 
+                <button type="button"
                         hx-get="/app/journey/{{.JourneyID}}"
                         hx-target="body"
                         hx-swap="innerHTML"
@@ -57,10 +130,131 @@
                     Cancel
                 </button>
             </div>
-            
-            <div class="htmx-indicator" style="margin-top: 1rem; text-align: center; display: none;">
-                Uploading...
-            </div>
         </form>
     </div>
 </div>
+
+<script>
+(function() {
+    // Progress tracking variables
+    let lastLoaded = 0;
+    let lastTime = Date.now();
+
+    // Progress event handler
+    htmx.on('#upload-form', 'htmx:xhr:progress', function(evt) {
+        const percent = Math.round(evt.detail.loaded / evt.detail.total * 100);
+        const loadedMB = (evt.detail.loaded / 1024 / 1024).toFixed(2);
+        const totalMB = (evt.detail.total / 1024 / 1024).toFixed(2);
+
+        // Update progress bar
+        const fill = document.getElementById('progress-fill');
+        fill.style.width = percent + '%';
+        fill.textContent = percent + '%';
+        fill.setAttribute('aria-valuenow', percent);
+
+        // Update progress text
+        document.getElementById('progress-text').textContent =
+            loadedMB + ' MB / ' + totalMB + ' MB';
+
+        // Calculate upload speed
+        const now = Date.now();
+        const timeDiff = (now - lastTime) / 1000;
+        if (timeDiff > 0.5) { // Update every 0.5 seconds
+            const bytesDiff = evt.detail.loaded - lastLoaded;
+            const speed = bytesDiff / timeDiff;
+            const speedMBps = (speed / 1024 / 1024).toFixed(2);
+
+            document.getElementById('speed-text').textContent =
+                'Upload speed: ' + speedMBps + ' MB/s';
+
+            lastLoaded = evt.detail.loaded;
+            lastTime = now;
+        }
+    });
+
+    // Before request: validate and show progress
+    htmx.on('#upload-form', 'htmx:beforeRequest', function(evt) {
+        const fileInput = document.getElementById('files');
+        const files = fileInput.files;
+
+        // Validate files
+        if (!files || files.length === 0) {
+            evt.preventDefault();
+            showStatus('Please select at least one file', 'error');
+            return false;
+        }
+
+        // Reset progress tracking
+        lastLoaded = 0;
+        lastTime = Date.now();
+
+        // Show progress container
+        document.getElementById('progress-container').classList.add('active');
+        document.getElementById('progress-fill').style.width = '0%';
+        document.getElementById('progress-fill').textContent = '';
+
+        // Disable submit button
+        const btn = document.getElementById('submit-btn');
+        btn.disabled = true;
+        btn.textContent = 'Uploading...';
+        btn.style.background = '#6c757d';
+        btn.style.cursor = 'not-allowed';
+
+        // Hide previous status
+        hideStatus();
+    });
+
+    // After request: re-enable form
+    htmx.on('#upload-form', 'htmx:afterRequest', function(evt) {
+        const btn = document.getElementById('submit-btn');
+        btn.disabled = false;
+        btn.textContent = 'Upload';
+        btn.style.background = '#007bff';
+        btn.style.cursor = 'pointer';
+
+        if (evt.detail.successful) {
+            // Success: hide progress, reset form
+            document.getElementById('progress-container').classList.remove('active');
+            document.getElementById('files').value = ''; // Reset file input
+            document.getElementById('title').value = '';
+            document.getElementById('description').value = '';
+        } else {
+            // Error
+            showStatus('Upload failed. Please try again.', 'error');
+            document.getElementById('progress-container').classList.remove('active');
+        }
+    });
+
+    // Network errors
+    htmx.on('#upload-form', 'htmx:responseError', function(evt) {
+        showStatus('Network error. Please check your connection.', 'error');
+        document.getElementById('progress-container').classList.remove('active');
+    });
+
+    htmx.on('#upload-form', 'htmx:sendError', function(evt) {
+        showStatus('Failed to send request. Please try again.', 'error');
+        document.getElementById('progress-container').classList.remove('active');
+    });
+
+    // Reset progress when user selects new files
+    htmx.on('#files', 'change', function() {
+        document.getElementById('progress-fill').style.width = '0%';
+        document.getElementById('progress-fill').textContent = '';
+        document.getElementById('progress-text').textContent = '0%';
+        document.getElementById('speed-text').textContent = '';
+        hideStatus();
+    });
+
+    // Helper functions
+    function showStatus(message, type) {
+        const status = document.getElementById('upload-status');
+        status.textContent = message;
+        status.className = 'upload-status active ' + type;
+    }
+
+    function hideStatus() {
+        const status = document.getElementById('upload-status');
+        status.className = 'upload-status';
+    }
+})();
+</script>

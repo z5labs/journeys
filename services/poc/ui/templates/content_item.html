@@ -1,41 +1,50 @@
-<div class="content-item" data-content-id="{{.ID}}" style="margin: 1rem 0; padding: 1rem; border: 1px solid #ddd; border-radius: 4px;">
-    {{if eq .Type "photo"}}
-        <img src="/app/content/{{.ID}}/preview" alt="{{.Title}}" style="max-width: 100%; height: auto; border-radius: 4px;">
-    {{else}}
-        <video controls style="max-width: 100%; height: auto; border-radius: 4px;">
-            <source src="/app/content/{{.ID}}/preview" type="{{.MimeType}}">
-            Your browser does not support the video tag.
-        </video>
-    {{end}}
-    
-    <div class="content-meta" style="margin-top: 0.5rem;">
-        <h3 style="margin: 0.5rem 0;">{{.Title}}</h3>
-        {{if .Description}}
-            <p style="margin: 0.5rem 0; color: #666;">{{.Description}}</p>
+<a href="/app/content/{{.ID}}" hx-boost="true" style="text-decoration: none; color: inherit; display: block;">
+    <div class="content-item" data-content-id="{{.ID}}" style="margin: 1rem 0; padding: 1rem; border: 1px solid #ddd; border-radius: 4px; cursor: pointer; transition: box-shadow 0.2s, transform 0.2s;">
+        <style>
+            .content-item:hover {
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+                transform: translateY(-2px);
+            }
+        </style>
+
+        {{if eq .Type "photo"}}
+            <img src="/app/content/{{.ID}}/preview" alt="{{.Title}}" style="max-width: 100%; height: auto; border-radius: 4px;">
+        {{else}}
+            <video style="max-width: 100%; height: auto; border-radius: 4px; pointer-events: none;">
+                <source src="/app/content/{{.ID}}/preview" type="{{.MimeType}}">
+                Your browser does not support the video tag.
+            </video>
         {{end}}
-        
-        {{if and .Latitude .Longitude}}
-        <div class="geo-info" style="margin: 0.5rem 0; padding: 0.5rem; background: #f5f5f5; border-radius: 4px;">
-            <p style="margin: 0.25rem 0; font-size: 0.875rem;">
-                📍 Location: {{printf "%.6f" .Latitude}}, {{printf "%.6f" .Longitude}}
-                {{if .Altitude}}({{printf "%.1f" .Altitude}}m){{end}}
-            </p>
-            {{if .LocationName}}
-            <p style="margin: 0.25rem 0; font-size: 0.875rem; color: #666;">{{.LocationName}}</p>
+
+        <div class="content-meta" style="margin-top: 0.5rem;">
+            <h3 style="margin: 0.5rem 0;">{{.Title}}</h3>
+            {{if .Description}}
+                <p style="margin: 0.5rem 0; color: #666;">{{.Description}}</p>
             {{end}}
-            <a href="https://www.google.com/maps?q={{.Latitude}},{{.Longitude}}" 
-               target="_blank" 
-               style="font-size: 0.875rem; color: #0066cc;">View on Map</a>
+
+            {{if and .Latitude .Longitude}}
+            <div class="geo-info" style="margin: 0.5rem 0; padding: 0.5rem; background: #f5f5f5; border-radius: 4px;">
+                <p style="margin: 0.25rem 0; font-size: 0.875rem;">
+                    📍 {{printf "%.6f" .Latitude}}, {{printf "%.6f" .Longitude}}
+                    {{if .Altitude}}({{printf "%.1f" .Altitude}}m){{end}}
+                </p>
+                {{if .LocationName}}
+                <p style="margin: 0.25rem 0; font-size: 0.875rem; color: #666;">{{.LocationName}}</p>
+                {{end}}
+            </div>
+            {{else}}
+            <div style="margin: 0.5rem 0;">
+                <p style="font-size: 0.875rem; color: #999;">📍 No location set</p>
+            </div>
+            {{end}}
+
+            {{if .CapturedAt}}
+            <time style="font-size: 0.875rem; color: #999;">
+                Captured: {{.CapturedAt.Format "2006-01-02 15:04:05"}}
+            </time>
+            <br>
+            {{end}}
+            <time style="font-size: 0.875rem; color: #999;">Uploaded: {{.UploadedAt.Format "2006-01-02 15:04:05"}}</time>
         </div>
-        {{end}}
-        
-        {{if .CapturedAt}}
-        <time style="font-size: 0.875rem; color: #999;">
-            Captured: {{.CapturedAt.Format "2006-01-02 15:04:05"}}
-        </time>
-        <br>
-        {{end}}
-        <time style="font-size: 0.875rem; color: #999;">Uploaded: {{.UploadedAt.Format "2006-01-02 15:04:05"}}</time>
-        <p style="font-size: 0.875rem; color: #999;">Size: {{.FileSize}} bytes</p>
     </div>
-</div>
+</a>

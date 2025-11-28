@@ -73,9 +73,12 @@ func Init(ctx context.Context, cfg Config) (*rest.Api, error) {
 		ui.GetJourneyForm(dgraph),
 		ui.CancelJourneyForm(dgraph),
 		ui.CreateJourney(dgraph),
+		ui.GetContent(dgraph),
 		ui.GetContentUploadForm(dgraph),
 		ui.UploadContent(dgraph, minioClient),
 		ui.GetContentPreview(dgraph, minioClient),
+		ui.GetLocationEditForm(dgraph),
+		ui.UpdateLocation(dgraph),
 	)
 
 	return api, nil

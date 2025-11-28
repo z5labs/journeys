@@ -44,7 +44,7 @@ func (h *contentPreviewHandler) Handle(ctx context.Context, req *rest.EmptyReque
 	}
 
 	query := `query getContent($contentID: string) {
-		content(func: eq(content.id, $contentID)) {
+		content(func: eq(content.id, $contentID)) @filter(type(Content)) {
 			content.minio_key
 			content.mime_type
 		}
