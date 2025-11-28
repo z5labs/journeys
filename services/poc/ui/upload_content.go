@@ -15,6 +15,7 @@ import (
 	"io"
 	"log/slog"
 	"math"
+	"mime"
 	"mime/multipart"
 	"net/http"
 	"path/filepath"
@@ -36,7 +37,7 @@ import (
 var contentItemTemplate string
 
 const (
-	maxFormSize = 10 * 1024 * 1024 * 1024 // 10GB for multipart form parsing
+	maxImageBufferSize = 100 * 1024 * 1024 // 100MB max for image buffering
 )
 
 var allowedMimeTypes = map[string]bool{
@@ -107,6 +108,55 @@ func extractGeoMetadata(fileData []byte, mimeType string) (*GeoMetadata, error) 
 	return meta, nil
 }
 
+// streamingFileUpload encapsulates streaming upload logic
+type streamingFileUpload struct {
+	part        *multipart.Part
+	contentType string
+	filename    string
+	isImage     bool
+	buffer      *bytes.Buffer // Only for images
+}
+
+func newStreamingFileUpload(part *multipart.Part) (*streamingFileUpload, error) {
+	contentType := part.Header.Get("Content-Type")
+
+	// Validate MIME type before upload
+	if !allowedMimeTypes[contentType] {
+		return nil, fmt.Errorf("unsupported file type: %s", contentType)
+	}
+
+	isImage := strings.HasPrefix(contentType, "image/")
+
+	upload := &streamingFileUpload{
+		part:        part,
+		contentType: contentType,
+		filename:    part.FileName(),
+		isImage:     isImage,
+	}
+
+	if isImage {
+		upload.buffer = &bytes.Buffer{}
+	}
+
+	return upload, nil
+}
+
+func (s *streamingFileUpload) getReader() io.Reader {
+	if s.isImage {
+		// TeeReader streams to MinIO while capturing for EXIF
+		return io.TeeReader(s.part, s.buffer)
+	}
+	// Videos: direct streaming, no buffering
+	return s.part
+}
+
+func (s *streamingFileUpload) extractMetadata() (*GeoMetadata, error) {
+	if !s.isImage || s.buffer.Len() == 0 {
+		return &GeoMetadata{}, nil
+	}
+	return extractGeoMetadata(s.buffer.Bytes(), s.contentType)
+}
+
 type contentNode struct {
 	UID          string     `json:"uid,omitempty"`
 	DType        []string   `json:"dgraph.type"`
@@ -127,30 +177,18 @@ type contentNode struct {
 
 type UploadContentRequest struct {
 	JourneyID   string
-	Files       []*multipart.FileHeader
+	rawRequest  *http.Request // Store for streaming access
 	Title       string
 	Description string
 }
 
 func (r *UploadContentRequest) ReadRequest(ctx context.Context, req *http.Request) error {
-	if err := req.ParseMultipartForm(maxFormSize); err != nil {
-		return fmt.Errorf("failed to parse multipart form: %w", err)
-	}
-
 	r.JourneyID = rest.PathParamValue(ctx, "journeyID")
 	if r.JourneyID == "" {
 		return fmt.Errorf("journey ID is required")
 	}
 
-	r.Title = strings.TrimSpace(req.FormValue("title"))
-	r.Description = strings.TrimSpace(req.FormValue("description"))
-
-	files := req.MultipartForm.File["files"]
-	if len(files) == 0 {
-		return fmt.Errorf("at least one file is required")
-	}
-
-	r.Files = files
+	r.rawRequest = req
 	return nil
 }
 
@@ -211,6 +249,19 @@ func UploadContent(dgraph *dgo.Dgraph, minio *storage.MinioClient) rest.ApiOptio
 }
 
 func (h *uploadContentHandler) Handle(ctx context.Context, req *UploadContentRequest) (*HtmlResponse, error) {
+	// Extract multipart boundary from Content-Type header
+	contentType := req.rawRequest.Header.Get("Content-Type")
+	_, params, err := mime.ParseMediaType(contentType)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse Content-Type: %w", err)
+	}
+
+	boundary := params["boundary"]
+	if boundary == "" {
+		return nil, fmt.Errorf("multipart boundary not found")
+	}
+
+	// Get journey UID first (before processing multipart stream)
 	query := `query getJourney($journeyID: string) {
 		journey(func: eq(journey.id, $journeyID)) {
 			uid
@@ -238,12 +289,65 @@ func (h *uploadContentHandler) Handle(ctx context.Context, req *UploadContentReq
 
 	journeyUID := result.Journey[0].UID
 
-	var htmlFragments bytes.Buffer
+	// Create streaming multipart reader
+	mr := multipart.NewReader(req.rawRequest.Body, boundary)
+	defer req.rawRequest.Body.Close()
 
-	for _, fileHeader := range req.Files {
-		if err := h.uploadSingleFile(ctx, req, fileHeader, journeyUID, &htmlFragments); err != nil {
-			return nil, err
+	formFields := make(map[string]string)
+	var htmlFragments bytes.Buffer
+	fileCount := 0
+
+	// Process parts as they arrive - upload files immediately
+	for {
+		part, err := mr.NextPart()
+		if err == io.EOF {
+			break
 		}
+		if err != nil {
+			return nil, fmt.Errorf("failed to read multipart part: %w", err)
+		}
+
+		formName := part.FormName()
+
+		// Handle text form fields
+		if part.FileName() == "" {
+			value, err := io.ReadAll(part)
+			if err != nil {
+				part.Close()
+				return nil, fmt.Errorf("failed to read form field: %w", err)
+			}
+			formFields[formName] = string(value)
+			part.Close()
+			continue
+		}
+
+		// Handle file uploads - upload immediately while reader is valid
+		if formName == "files" {
+			fileCount++
+			upload, err := newStreamingFileUpload(part)
+			if err != nil {
+				part.Close()
+				return nil, err
+			}
+
+			// Extract form fields for this upload
+			req.Title = strings.TrimSpace(formFields["title"])
+			req.Description = strings.TrimSpace(formFields["description"])
+
+			// Upload immediately while part reader is valid
+			if err := h.uploadSingleFileStreaming(ctx, req, upload, journeyUID, &htmlFragments); err != nil {
+				part.Close()
+				return nil, err
+			}
+			part.Close()
+		} else {
+			part.Close()
+		}
+	}
+
+	// Validate at least one file
+	if fileCount == 0 {
+		return nil, fmt.Errorf("at least one file is required")
 	}
 
 	htmlFragments.WriteString(`<div id="content-form-modal" hx-swap-oob="innerHTML"></div>`)
@@ -254,32 +358,40 @@ func (h *uploadContentHandler) Handle(ctx context.Context, req *UploadContentReq
 	}, nil
 }
 
-func (h *uploadContentHandler) uploadSingleFile(ctx context.Context, req *UploadContentRequest, fileHeader *multipart.FileHeader, journeyUID string, htmlFragments *bytes.Buffer) error {
-	contentType := fileHeader.Header.Get("Content-Type")
-	if !allowedMimeTypes[contentType] {
-		return fmt.Errorf("unsupported file type: %s", contentType)
-	}
-
-	file, err := fileHeader.Open()
-	if err != nil {
-		return fmt.Errorf("failed to open file: %w", err)
-	}
-	defer file.Close()
-
+func (h *uploadContentHandler) uploadSingleFileStreaming(
+	ctx context.Context,
+	req *UploadContentRequest,
+	upload *streamingFileUpload,
+	journeyUID string,
+	htmlFragments *bytes.Buffer,
+) error {
+	// Generate MinIO key
 	contentID := uuid.NewString()
-	ext := filepath.Ext(fileHeader.Filename)
+	ext := filepath.Ext(upload.filename)
 	minioKey := fmt.Sprintf("%s/%s%s", req.JourneyID, contentID, ext)
 
-	fileData, err := io.ReadAll(file)
+	// Stream to MinIO with unknown size (-1)
+	reader := upload.getReader()
+	err := h.minio.UploadFile(ctx, minioKey, reader, -1, upload.contentType)
 	if err != nil {
-		return fmt.Errorf("failed to read file: %w", err)
-	}
-
-	if err := h.minio.UploadFile(ctx, minioKey, bytes.NewReader(fileData), fileHeader.Size, contentType); err != nil {
 		return fmt.Errorf("failed to upload to MinIO: %w", err)
 	}
 
-	geoMeta, _ := extractGeoMetadata(fileData, contentType)
+	// For images, validate buffer size didn't exceed limit
+	if upload.isImage && upload.buffer.Len() >= maxImageBufferSize {
+		// Image exceeded buffer limit - clean up and reject
+		_ = h.minio.DeleteFile(ctx, minioKey)
+		return fmt.Errorf("image file exceeds maximum size of %d bytes", maxImageBufferSize)
+	}
+
+	// Get actual file size from MinIO
+	fileInfo, err := h.minio.GetFileInfo(ctx, minioKey)
+	if err != nil {
+		return fmt.Errorf("failed to get file info: %w", err)
+	}
+
+	// Extract EXIF metadata (only buffered for images)
+	geoMeta, _ := upload.extractMetadata()
 
 	log := humus.Logger("upload")
 	if geoMeta.Latitude != nil && geoMeta.Longitude != nil {
@@ -292,12 +404,12 @@ func (h *uploadContentHandler) uploadSingleFile(ctx context.Context, req *Upload
 
 	contentTitle := req.Title
 	if contentTitle == "" {
-		contentTitle = fileHeader.Filename
+		contentTitle = upload.filename
 	}
 
-	// Automatically determine content type from MIME type
-	detectedType := determineContentType(contentType)
+	detectedType := determineContentType(upload.contentType)
 
+	// Create Dgraph node
 	node := &contentNode{
 		UID:         "_:content",
 		DType:       []string{"Content"},
@@ -307,8 +419,8 @@ func (h *uploadContentHandler) uploadSingleFile(ctx context.Context, req *Upload
 		Title:       contentTitle,
 		Description: req.Description,
 		UploadedAt:  time.Now().UTC(),
-		FileSize:    fileHeader.Size,
-		MimeType:    contentType,
+		FileSize:    fileInfo.Size, // Use actual size from MinIO
+		MimeType:    upload.contentType,
 		Latitude:    geoMeta.Latitude,
 		Longitude:   geoMeta.Longitude,
 		Altitude:    geoMeta.Altitude,
@@ -344,6 +456,7 @@ func (h *uploadContentHandler) uploadSingleFile(ctx context.Context, req *Upload
 		return fmt.Errorf("failed to link content to journey: %w", err)
 	}
 
+	// Render HTML fragment
 	contentModel := Content{
 		ID:           contentID,
 		Type:         detectedType,
@@ -351,8 +464,8 @@ func (h *uploadContentHandler) uploadSingleFile(ctx context.Context, req *Upload
 		Title:        contentTitle,
 		Description:  req.Description,
 		UploadedAt:   time.Now().UTC(),
-		FileSize:     fileHeader.Size,
-		MimeType:     contentType,
+		FileSize:     fileInfo.Size,
+		MimeType:     upload.contentType,
 		Latitude:     geoMeta.Latitude,
 		Longitude:    geoMeta.Longitude,
 		Altitude:     geoMeta.Altitude,
