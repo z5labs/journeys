@@ -7,6 +7,8 @@ otel:
   resource:
     service_name: journeys-poc
   trace:
+    sampling:
+      ratio: {{env "OTEL_SAMPLING" | default "1.0"}}
     exporter:
       type: {{env "OTEL_TRACE_EXPORTER" | default "otlp"}}
       otlp:

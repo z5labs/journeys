@@ -32,8 +32,7 @@ import (
 var contentItemTemplate string
 
 const (
-	maxPhotoSize = 10 * 1024 * 1024  // 10MB
-	maxVideoSize = 100 * 1024 * 1024 // 100MB
+	maxFormSize = 10 * 1024 * 1024 * 1024 // 10GB for multipart form parsing
 )
 
 var allowedMimeTypes = map[string]bool{
@@ -66,7 +65,7 @@ type UploadContentRequest struct {
 }
 
 func (r *UploadContentRequest) ReadRequest(ctx context.Context, req *http.Request) error {
-	if err := req.ParseMultipartForm(maxVideoSize); err != nil {
+	if err := req.ParseMultipartForm(maxFormSize); err != nil {
 		return fmt.Errorf("failed to parse multipart form: %w", err)
 	}
 
@@ -177,14 +176,6 @@ func (h *uploadContentHandler) uploadSingleFile(ctx context.Context, req *Upload
 	contentType := fileHeader.Header.Get("Content-Type")
 	if !allowedMimeTypes[contentType] {
 		return fmt.Errorf("unsupported file type: %s", contentType)
-	}
-
-	maxSize := maxPhotoSize
-	if req.Type == "video" {
-		maxSize = maxVideoSize
-	}
-	if fileHeader.Size > int64(maxSize) {
-		return fmt.Errorf("file too large: %d bytes (max %d)", fileHeader.Size, maxSize)
 	}
 
 	file, err := fileHeader.Open()

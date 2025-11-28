@@ -9,6 +9,8 @@ services:
     container_name: poc
     ports:
       - "8080:8080"   # POC REST API
+    volumes:
+      - poc-tmp:/tmp
     environment:
       - OTEL_OTLP_TARGET=otel-collector:4317
       - DGRAPH_ADDRESS=dgraph:9080
@@ -27,7 +29,7 @@ services:
     image: docker.io/dgraph/standalone:latest
     container_name: dgraph
     ports:
-      - "8000:8000"   # Dgraph Ratel UI
+      - "8008:8080"   # Dgraph Ratel UI
       - "9080:9080"   # Dgraph gRPC
     volumes:
       - dgraph-data:/dgraph
@@ -132,6 +134,8 @@ services:
       - loki
 
 volumes:
+  poc-tmp:
+    driver: local
   minio-data:
     driver: local
   tempo-data:

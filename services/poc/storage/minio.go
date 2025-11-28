@@ -65,6 +65,14 @@ func (m *MinioClient) GetFileURL(ctx context.Context, objectKey string, expiry t
 	return url.String(), nil
 }
 
+func (m *MinioClient) GetFile(ctx context.Context, objectKey string) (*minio.Object, error) {
+	return m.client.GetObject(ctx, m.bucket, objectKey, minio.GetObjectOptions{})
+}
+
+func (m *MinioClient) GetFileInfo(ctx context.Context, objectKey string) (minio.ObjectInfo, error) {
+	return m.client.StatObject(ctx, m.bucket, objectKey, minio.StatObjectOptions{})
+}
+
 func (m *MinioClient) DeleteFile(ctx context.Context, objectKey string) error {
 	return m.client.RemoveObject(ctx, m.bucket, objectKey, minio.RemoveObjectOptions{})
 }

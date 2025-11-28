@@ -9,12 +9,13 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
-	"time"
 
 	"github.com/z5labs/journeys/services/poc/storage"
 
 	"github.com/dgraph-io/dgo/v240"
+	"github.com/swaggest/openapi-go/openapi3"
 	"github.com/z5labs/humus/rest"
 )
 
@@ -36,7 +37,7 @@ func GetContentPreview(dgraph *dgo.Dgraph, minio *storage.MinioClient) rest.ApiO
 	)
 }
 
-func (h *contentPreviewHandler) Handle(ctx context.Context, req *rest.EmptyRequest) (*HtmlResponse, error) {
+func (h *contentPreviewHandler) Handle(ctx context.Context, req *rest.EmptyRequest) (*streamResponse, error) {
 	contentID := rest.PathParamValue(ctx, "contentID")
 	if contentID == "" {
 		return nil, fmt.Errorf("content ID is required")
@@ -45,10 +46,11 @@ func (h *contentPreviewHandler) Handle(ctx context.Context, req *rest.EmptyReque
 	query := `query getContent($contentID: string) {
 		content(func: eq(content.id, $contentID)) {
 			content.minio_key
+			content.mime_type
 		}
 	}`
 
-	vars := map[string]string{"contentID": contentID}
+	vars := map[string]string{"$contentID": contentID}
 	resp, err := h.dgraph.NewReadOnlyTxn().QueryWithVars(ctx, query, vars)
 	if err != nil {
 		return nil, fmt.Errorf("failed to query content: %w", err)
@@ -57,6 +59,7 @@ func (h *contentPreviewHandler) Handle(ctx context.Context, req *rest.EmptyReque
 	var result struct {
 		Content []struct {
 			MinioKey string `json:"content.minio_key"`
+			MimeType string `json:"content.mime_type"`
 		} `json:"content"`
 	}
 	if err := json.Unmarshal(resp.Json, &result); err != nil {
@@ -68,24 +71,59 @@ func (h *contentPreviewHandler) Handle(ctx context.Context, req *rest.EmptyReque
 	}
 
 	minioKey := result.Content[0].MinioKey
+	mimeType := result.Content[0].MimeType
 
-	presignedURL, err := h.minio.GetFileURL(ctx, minioKey, 15*time.Minute)
+	object, err := h.minio.GetFile(ctx, minioKey)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get presigned URL: %w", err)
+		return nil, fmt.Errorf("failed to get file from MinIO: %w", err)
 	}
 
-	redirectHTML := fmt.Sprintf(`<!DOCTYPE html>
-<html>
-<head>
-    <meta http-equiv="refresh" content="0; url=%s">
-</head>
-<body>
-    <p>Redirecting...</p>
-</body>
-</html>`, presignedURL)
+	info, err := object.Stat()
+	if err != nil {
+		object.Close()
+		return nil, fmt.Errorf("failed to get file info: %w", err)
+	}
 
-	return &HtmlResponse{
-		ContentType: "text/html; charset=utf-8",
-		Body:        []byte(redirectHTML),
+	return &streamResponse{
+		contentType:   mimeType,
+		contentLength: info.Size,
+		reader:        object,
 	}, nil
+}
+
+type streamResponse struct {
+	contentType   string
+	contentLength int64
+	reader        io.ReadCloser
+}
+
+func (r *streamResponse) WriteResponse(ctx context.Context, w http.ResponseWriter) error {
+	defer r.reader.Close()
+	w.Header().Set("Content-Type", r.contentType)
+	w.Header().Set("Content-Length", fmt.Sprintf("%d", r.contentLength))
+	_, err := io.Copy(w, r.reader)
+	return err
+}
+
+func (r *streamResponse) Spec() (int, openapi3.ResponseOrRef, error) {
+	schema := openapi3.Schema{}
+	schema.WithType("string").WithFormat("binary").WithDescription("Binary content stream")
+
+	resp := openapi3.Response{
+		Description: "Content file stream",
+		Content: map[string]openapi3.MediaType{
+			"image/*": {
+				Schema: &openapi3.SchemaOrRef{
+					Schema: &schema,
+				},
+			},
+			"video/*": {
+				Schema: &openapi3.SchemaOrRef{
+					Schema: &schema,
+				},
+			},
+		},
+	}
+
+	return http.StatusOK, openapi3.ResponseOrRef{Response: &resp}, nil
 }
