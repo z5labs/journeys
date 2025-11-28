@@ -8,6 +8,7 @@ package app
 import (
 	"context"
 
+	"github.com/z5labs/journeys/services/poc/storage"
 	"github.com/z5labs/journeys/services/poc/ui"
 
 	"github.com/dgraph-io/dgo/v240"
@@ -23,6 +24,14 @@ type Config struct {
 	Dgraph struct {
 		Address string `config:"address"`
 	} `config:"dgraph"`
+
+	Minio struct {
+		Endpoint  string `config:"endpoint"`
+		AccessKey string `config:"access_key"`
+		SecretKey string `config:"secret_key"`
+		Bucket    string `config:"bucket"`
+		UseSSL    bool   `config:"use_ssl"`
+	} `config:"minio"`
 }
 
 func Init(ctx context.Context, cfg Config) (*rest.Api, error) {
@@ -41,6 +50,21 @@ func Init(ctx context.Context, cfg Config) (*rest.Api, error) {
 		return nil, err
 	}
 
+	minioClient, err := storage.NewMinioClient(
+		cfg.Minio.Endpoint,
+		cfg.Minio.AccessKey,
+		cfg.Minio.SecretKey,
+		cfg.Minio.Bucket,
+		cfg.Minio.UseSSL,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := minioClient.EnsureBucket(ctx); err != nil {
+		return nil, err
+	}
+
 	api := rest.NewApi(
 		cfg.OpenApi.Title,
 		cfg.OpenApi.Version,
@@ -49,6 +73,9 @@ func Init(ctx context.Context, cfg Config) (*rest.Api, error) {
 		ui.GetJourneyForm(dgraph),
 		ui.CancelJourneyForm(dgraph),
 		ui.CreateJourney(dgraph),
+		ui.GetContentUploadForm(dgraph),
+		ui.UploadContent(dgraph, minioClient),
+		ui.GetContentPreview(dgraph, minioClient),
 	)
 
 	return api, nil

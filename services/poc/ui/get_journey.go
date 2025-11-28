@@ -13,6 +13,7 @@ import (
 	"fmt"
 	"html/template"
 	"net/http"
+	"time"
 
 	"github.com/dgraph-io/dgo/v240"
 	"github.com/z5labs/humus/rest"
@@ -46,19 +47,26 @@ func GetJourney(dgraph *dgo.Dgraph) rest.ApiOption {
 }
 
 func (h *getJourneyHandler) Handle(ctx context.Context, req *rest.EmptyRequest) (*HtmlResponse, error) {
-	// Extract journey ID from path parameter
-	// Note: PathParamValue can panic if the parameter wasn't injected into context
 	journeyID := rest.PathParamValue(ctx, "id")
 	if journeyID == "" {
 		return nil, fmt.Errorf("journey ID is required")
 	}
 
-	// Query Dgraph for the specific journey
 	query := `
 	query getJourney($id: string) {
 		journey(func: eq(journey.id, $id)) @filter(type(Journey)) {
 			journey.id
 			journey.title
+			journey.content {
+				content.id
+				content.type
+				content.minio_key
+				content.title
+				content.description
+				content.uploaded_at
+				content.file_size
+				content.mime_type
+			}
 		}
 	}
 	`
@@ -73,11 +81,20 @@ func (h *getJourneyHandler) Handle(ctx context.Context, req *rest.EmptyRequest) 
 		return nil, fmt.Errorf("failed to query journey: %w", err)
 	}
 
-	// Parse response
 	var result struct {
 		Journey []struct {
-			ID    string `json:"journey.id"`
-			Title string `json:"journey.title"`
+			ID       string `json:"journey.id"`
+			Title    string `json:"journey.title"`
+			Contents []struct {
+				ID          string    `json:"content.id"`
+				Type        string    `json:"content.type"`
+				MinioKey    string    `json:"content.minio_key"`
+				Title       string    `json:"content.title"`
+				Description string    `json:"content.description"`
+				UploadedAt  time.Time `json:"content.uploaded_at"`
+				FileSize    int64     `json:"content.file_size"`
+				MimeType    string    `json:"content.mime_type"`
+			} `json:"journey.content"`
 		} `json:"journey"`
 	}
 
@@ -85,18 +102,31 @@ func (h *getJourneyHandler) Handle(ctx context.Context, req *rest.EmptyRequest) 
 		return nil, fmt.Errorf("failed to parse query result: %w", err)
 	}
 
-	// Check if journey was found
 	if len(result.Journey) == 0 {
 		return nil, fmt.Errorf("journey not found: %s", journeyID)
 	}
 
-	// Create journey model for template
-	journeyModel := journey{
-		ID:    result.Journey[0].ID,
-		Title: result.Journey[0].Title,
+	j := result.Journey[0]
+	contents := make([]Content, len(j.Contents))
+	for i, c := range j.Contents {
+		contents[i] = Content{
+			ID:          c.ID,
+			Type:        c.Type,
+			MinioKey:    c.MinioKey,
+			Title:       c.Title,
+			Description: c.Description,
+			UploadedAt:  c.UploadedAt,
+			FileSize:    c.FileSize,
+			MimeType:    c.MimeType,
+		}
 	}
 
-	// Execute template
+	journeyModel := journey{
+		ID:       j.ID,
+		Title:    j.Title,
+		Contents: contents,
+	}
+
 	var buf bytes.Buffer
 	err = h.template.Execute(&buf, journeyModel)
 	if err != nil {

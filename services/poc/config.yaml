@@ -37,3 +37,4 @@ minio:
   access_key: {{env "MINIO_ACCESS_KEY" | default "minioadmin"}}
   secret_key: {{env "MINIO_SECRET_KEY" | default "minioadmin"}}
   bucket: {{env "MINIO_BUCKET" | default "onebrc"}}
+  use_ssl: {{env "MINIO_USE_SSL" | default "false"}}
