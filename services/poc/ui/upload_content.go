@@ -47,6 +47,17 @@ var allowedMimeTypes = map[string]bool{
 	"video/quicktime": true,
 }
 
+// determineContentType categorizes content based on MIME type
+func determineContentType(mimeType string) string {
+	if strings.HasPrefix(mimeType, "image/") {
+		return "photo"
+	}
+	if strings.HasPrefix(mimeType, "video/") {
+		return "video"
+	}
+	return "unknown"
+}
+
 type GeoMetadata struct {
 	Latitude   *float64
 	Longitude  *float64
@@ -117,7 +128,6 @@ type contentNode struct {
 type UploadContentRequest struct {
 	JourneyID   string
 	Files       []*multipart.FileHeader
-	Type        string
 	Title       string
 	Description string
 }
@@ -132,13 +142,8 @@ func (r *UploadContentRequest) ReadRequest(ctx context.Context, req *http.Reques
 		return fmt.Errorf("journey ID is required")
 	}
 
-	r.Type = strings.TrimSpace(req.FormValue("type"))
 	r.Title = strings.TrimSpace(req.FormValue("title"))
 	r.Description = strings.TrimSpace(req.FormValue("description"))
-
-	if r.Type != "photo" && r.Type != "video" {
-		return fmt.Errorf("invalid content type: must be 'photo' or 'video'")
-	}
 
 	files := req.MultipartForm.File["files"]
 	if len(files) == 0 {
@@ -290,21 +295,24 @@ func (h *uploadContentHandler) uploadSingleFile(ctx context.Context, req *Upload
 		contentTitle = fileHeader.Filename
 	}
 
+	// Automatically determine content type from MIME type
+	detectedType := determineContentType(contentType)
+
 	node := &contentNode{
-		UID:          "_:content",
-		DType:        []string{"Content"},
-		ContentID:    contentID,
-		Type:         req.Type,
-		MinioKey:     minioKey,
-		Title:        contentTitle,
-		Description:  req.Description,
-		UploadedAt:   time.Now().UTC(),
-		FileSize:     fileHeader.Size,
-		MimeType:     contentType,
-		Latitude:     geoMeta.Latitude,
-		Longitude:    geoMeta.Longitude,
-		Altitude:     geoMeta.Altitude,
-		CapturedAt:   geoMeta.CapturedAt,
+		UID:         "_:content",
+		DType:       []string{"Content"},
+		ContentID:   contentID,
+		Type:        detectedType,
+		MinioKey:    minioKey,
+		Title:       contentTitle,
+		Description: req.Description,
+		UploadedAt:  time.Now().UTC(),
+		FileSize:    fileHeader.Size,
+		MimeType:    contentType,
+		Latitude:    geoMeta.Latitude,
+		Longitude:   geoMeta.Longitude,
+		Altitude:    geoMeta.Altitude,
+		CapturedAt:  geoMeta.CapturedAt,
 	}
 
 	jsonData, err := json.Marshal(node)
@@ -338,7 +346,7 @@ func (h *uploadContentHandler) uploadSingleFile(ctx context.Context, req *Upload
 
 	contentModel := Content{
 		ID:           contentID,
-		Type:         req.Type,
+		Type:         detectedType,
 		MinioKey:     minioKey,
 		Title:        contentTitle,
 		Description:  req.Description,
