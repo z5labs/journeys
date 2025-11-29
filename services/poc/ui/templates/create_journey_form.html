@@ -1,0 +1,17 @@
+<form hx-post="/app/journey"
+      hx-target="#journeys-list"
+      hx-swap="afterbegin"
+      class="create-journey-form">
+    <input type="text"
+           name="title"
+           placeholder="Enter journey title"
+           required
+           autofocus>
+    <button type="submit">Create</button>
+    <button type="button"
+            hx-get="/app/journey/cancel"
+            hx-target="#create-journey-container"
+            hx-swap="innerHTML">
+        Cancel
+    </button>
+</form>
