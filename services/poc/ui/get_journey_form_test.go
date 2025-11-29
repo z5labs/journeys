@@ -39,16 +39,16 @@ func TestGetJourneyForm_Success(t *testing.T) {
 	// Assertions
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 	assert.Equal(t, "text/html; charset=utf-8", resp.Header.Get("Content-Type"))
-	
+
 	// Verify HTMX attributes for form posting
 	assert.Contains(t, bodyStr, `hx-post="/app/journey"`)
 	assert.Contains(t, bodyStr, `hx-target="#journeys-list"`)
 	assert.Contains(t, bodyStr, `hx-swap="afterbegin"`)
-	
+
 	// Verify form has input for title
 	assert.Contains(t, bodyStr, `name="title"`)
 	assert.Contains(t, bodyStr, `type="text"`)
-	
+
 	// Verify form has submit button
 	assert.Contains(t, bodyStr, `type="submit"`)
 }
@@ -76,11 +76,11 @@ func TestCancelJourneyForm_Success(t *testing.T) {
 	// Assertions
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 	assert.Equal(t, "text/html; charset=utf-8", resp.Header.Get("Content-Type"))
-	
+
 	// Verify HTMX attributes for replacing form with button
 	assert.Contains(t, bodyStr, `hx-get="/app/journey/form"`)
 	assert.Contains(t, bodyStr, `hx-target="#create-journey-container"`)
-	
+
 	// Verify it's a button
 	assert.Contains(t, bodyStr, `<button`)
 }

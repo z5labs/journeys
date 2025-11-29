@@ -86,12 +86,12 @@ func TestGetLocationEditForm_Success_WithLocation(t *testing.T) {
 	// Assertions
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 	assert.Equal(t, "text/html; charset=utf-8", resp.Header.Get("Content-Type"))
-	
+
 	// Verify form has pre-populated values
 	assert.Contains(t, bodyStr, "34.0522")
 	assert.Contains(t, bodyStr, "-118.2437")
 	assert.Contains(t, bodyStr, "100")
-	
+
 	// Verify HTMX attributes for form submission
 	assert.Contains(t, bodyStr, `hx-put="/app/content/photo-1/location"`)
 }
@@ -161,7 +161,7 @@ func TestGetLocationEditForm_Success_NoLocation(t *testing.T) {
 	}
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 	assert.Equal(t, "text/html; charset=utf-8", resp.Header.Get("Content-Type"))
-	
+
 	// Verify form is rendered (with empty location fields)
 	assert.Contains(t, bodyStr, `hx-put="/app/content/photo-1/location"`)
 }

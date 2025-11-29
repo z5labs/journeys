@@ -190,10 +190,10 @@ func (h *updateLocationHandler) Handle(ctx context.Context, req *UpdateLocationR
 
 	// Update the location fields
 	updateNode := map[string]interface{}{
-		"uid":              contentUID,
-		"content.latitude": req.Latitude,
+		"uid":               contentUID,
+		"content.latitude":  req.Latitude,
 		"content.longitude": req.Longitude,
-		"content.altitude": req.Altitude,
+		"content.altitude":  req.Altitude,
 	}
 
 	jsonData, err := json.Marshal(updateNode)

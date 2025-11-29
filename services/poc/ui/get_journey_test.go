@@ -505,7 +505,7 @@ func TestGroupContentByDate(t *testing.T) {
 					DateKey:     "2025-01-15",
 					DisplayDate: "2025-01-15",
 					Contents: []Content{
-						{ID: "2", CapturedAt: ptrTime(time.Date(2025, 1, 15, 9, 0, 0, 0, time.UTC))},   // 9:00
+						{ID: "2", CapturedAt: ptrTime(time.Date(2025, 1, 15, 9, 0, 0, 0, time.UTC))},  // 9:00
 						{ID: "3", CapturedAt: ptrTime(time.Date(2025, 1, 15, 12, 0, 0, 0, time.UTC))}, // 12:00
 						{ID: "1", CapturedAt: ptrTime(time.Date(2025, 1, 15, 14, 0, 0, 0, time.UTC))}, // 14:00
 					},

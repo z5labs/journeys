@@ -39,14 +39,14 @@ func TestGetContentUploadForm_Success(t *testing.T) {
 	// Assertions
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 	assert.Equal(t, "text/html; charset=utf-8", resp.Header.Get("Content-Type"))
-	
+
 	// Verify HTMX attributes for form posting
 	assert.Contains(t, bodyStr, `hx-post="/app/journey/test-journey-123/content"`)
-	
+
 	// Verify form has file input
 	assert.Contains(t, bodyStr, `type="file"`)
 	assert.Contains(t, bodyStr, `name="files"`)
-	
+
 	// Verify multipart form encoding (HTMX style)
 	assert.Contains(t, bodyStr, `hx-encoding="multipart/form-data"`)
 }
