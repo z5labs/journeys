@@ -30,7 +30,27 @@ type getJourneyHandler struct {
 
 // GetJourney creates a REST operation for viewing a single journey by ID
 func GetJourney(dgraph *dgo.Dgraph) rest.ApiOption {
-	tmpl, err := template.New("journey_view.html").Parse(journeyViewTemplate)
+	tmpl, err := template.New("journey_view.html").Funcs(template.FuncMap{
+		"deref": func(ptr interface{}) interface{} {
+			if ptr == nil {
+				return nil
+			}
+			switch v := ptr.(type) {
+			case *float64:
+				if v == nil {
+					return nil
+				}
+				return *v
+			case *int:
+				if v == nil {
+					return nil
+				}
+				return *v
+			default:
+				return ptr
+			}
+		},
+	}).Parse(journeyViewTemplate)
 	if err != nil {
 		panic(err)
 	}

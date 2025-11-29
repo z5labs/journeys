@@ -5,6 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{.Content.Title}} - Journeys</title>
     <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 1rem;
+            font-family: system-ui, -apple-system, sans-serif;
+        }
+    </style>
 </head>
 <body>
     <nav style="margin-bottom: 1rem;">
@@ -20,9 +27,9 @@
 
         <div class="content-media" style="margin: 1rem 0;">
             {{if eq .Content.Type "photo"}}
-                <img src="/app/content/{{.Content.ID}}/preview" alt="{{.Content.Title}}" style="max-width: 100%; height: auto; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                <img src="/app/content/{{.Content.ID}}/preview" alt="{{.Content.Title}}" style="max-width: 100%; max-height: 60vh; width: auto; height: auto; object-fit: contain; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); display: block;">
             {{else}}
-                <video controls style="max-width: 100%; height: auto; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                <video controls style="max-width: 100%; max-height: 60vh; width: auto; height: auto; object-fit: contain; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); display: block;">
                     <source src="/app/content/{{.Content.ID}}/preview" type="{{.Content.MimeType}}">
                     Your browser does not support the video tag.
                 </video>

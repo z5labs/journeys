@@ -6,12 +6,206 @@
     <title>{{.Title}} - Journeys</title>
     <script src="https://unpkg.com/htmx.org@1.9.10"></script>
     <style>
-        .content-item:hover {
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-            transform: translateY(-2px);
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
         }
-        .content-item:active {
-            transform: translateY(0);
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        nav {
+            padding: 1rem;
+            background: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        nav a {
+            text-decoration: none;
+            color: #007bff;
+            font-weight: 500;
+        }
+
+        .journey-container {
+            display: flex;
+            height: calc(100vh - 57px);
+            overflow: hidden;
+        }
+
+        .map-column {
+            flex: 0 0 50%;
+            min-width: 320px;
+            position: relative;
+            background: #e9ecef;
+        }
+
+        #map {
+            width: 100%;
+            height: 100%;
+        }
+
+        .content-column {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1.5rem;
+            background: white;
+        }
+
+        .journey-header {
+            margin-bottom: 1.5rem;
+        }
+
+        .journey-header h1 {
+            font-size: 1.75rem;
+            margin-bottom: 0.5rem;
+            color: #212529;
+        }
+
+        .journey-meta {
+            display: flex;
+            gap: 1rem;
+            font-size: 0.875rem;
+            color: #6c757d;
+        }
+
+        .add-content-btn {
+            margin: 1rem 0;
+            padding: 0.75rem 1.5rem;
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: background 0.2s;
+        }
+
+        .add-content-btn:hover {
+            background: #218838;
+        }
+
+        .content-section-header {
+            margin: 2rem 0 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #dee2e6;
+        }
+
+        .content-section-header h2 {
+            font-size: 1.25rem;
+            color: #495057;
+        }
+
+        .date-section {
+            margin-bottom: 2rem;
+        }
+
+        .date-section h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #343a40;
+        }
+
+        .content-item {
+            margin: 1rem 0;
+            padding: 1rem;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            color: inherit;
+            display: block;
+        }
+
+        .content-item:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            transform: translateY(-2px);
+            border-color: #007bff;
+        }
+
+        .content-item.highlighted {
+            border-color: #007bff;
+            background: #f0f8ff;
+            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+        }
+
+        .content-item img,
+        .content-item video {
+            width: 200px;
+            height: 150px;
+            object-fit: cover;
+            border-radius: 4px;
+            pointer-events: none;
+            display: block;
+        }
+
+        .content-meta {
+            margin-top: 0.75rem;
+        }
+
+        .content-meta h3 {
+            font-size: 1rem;
+            margin-bottom: 0.25rem;
+            color: #212529;
+        }
+
+        .content-meta p {
+            margin: 0.25rem 0;
+            color: #6c757d;
+            font-size: 0.875rem;
+        }
+
+        .content-meta time {
+            font-size: 0.875rem;
+            color: #adb5bd;
+        }
+
+        .location-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            margin-top: 0.5rem;
+            padding: 0.25rem 0.5rem;
+            background: #e7f3ff;
+            color: #0056b3;
+            border-radius: 4px;
+            font-size: 0.75rem;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: #adb5bd;
+        }
+
+        .empty-state p {
+            font-style: italic;
+            margin-bottom: 1rem;
+        }
+
+        @media (max-width: 768px) {
+            .journey-container {
+                flex-direction: column;
+            }
+
+            .map-column {
+                flex: 0 0 300px;
+            }
+
+            .content-column {
+                flex: 1;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .map-column {
+                flex: 0 0 250px;
+            }
         }
     </style>
 </head>
@@ -20,61 +214,106 @@
         <a href="/app" hx-boost="true">&larr; Back to Journeys</a>
     </nav>
 
-    <div class="journey-view">
-        <h1>{{.Title}}</h1>
-        <dl>
-            <dt>ID:</dt>
-            <dd>{{.ID}}</dd>
-        </dl>
+    <div class="journey-container">
+        <div class="map-column">
+            <div id="map" role="application" aria-label="Journey map showing content locations"></div>
+        </div>
 
-        <button hx-get="/app/journey/{{.ID}}/content/form"
-                hx-target="#content-form-modal"
-                hx-swap="innerHTML"
-                style="margin: 1rem 0; padding: 0.75rem 1.5rem; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 1rem;">
-            ➕ Add Content
-        </button>
+        <div class="content-column">
+            <div class="journey-header">
+                <h1>{{.Title}}</h1>
+                <div class="journey-meta">
+                    <span>ID: {{.ID}}</span>
+                </div>
+            </div>
 
-        <h2>Content</h2>
-        <div id="content-gallery">
-            {{if .Sections}}
-                {{range .Sections}}
-                    <div class="date-section" style="margin: 2rem 0;">
-                        <h3 style="margin: 1rem 0; padding-bottom: 0.5rem; border-bottom: 2px solid #ddd; color: #333;">
-                            {{.DisplayDate}}
-                        </h3>
+            <button hx-get="/app/journey/{{.ID}}/content/form"
+                    hx-target="#content-form-modal"
+                    hx-swap="innerHTML"
+                    class="add-content-btn">
+                ➕ Add Content
+            </button>
 
-                        {{range .Contents}}
-                            <a href="/app/content/{{.ID}}" hx-boost="true" style="text-decoration: none; color: inherit; display: block;">
-                                <div class="content-item" data-content-id="{{.ID}}" style="margin: 1rem 0; padding: 1rem; border: 1px solid #ddd; border-radius: 4px; cursor: pointer; transition: box-shadow 0.2s, transform 0.1s;">
+            <div class="content-section-header">
+                <h2>Content</h2>
+            </div>
+
+            <div id="content-gallery">
+                {{if .Sections}}
+                    {{range .Sections}}
+                        <div class="date-section">
+                            <h3>{{.DisplayDate}}</h3>
+
+                            {{range .Contents}}
+                                <a href="/app/content/{{.ID}}" 
+                                   hx-boost="true" 
+                                   class="content-item" 
+                                   data-content-id="{{.ID}}"
+                                   {{if and .Latitude .Longitude}}
+                                   data-lat="{{.Latitude}}"
+                                   data-lng="{{.Longitude}}"
+                                   {{end}}>
                                     {{if eq .Type "photo"}}
-                                        <img src="/app/content/{{.ID}}/preview" alt="{{.Title}}" style="max-width: 100%; height: auto; border-radius: 4px; pointer-events: none;">
+                                        <img src="/app/content/{{.ID}}/preview" alt="{{.Title}}" loading="lazy" decoding="async">
                                     {{else}}
-                                        <video controls style="max-width: 100%; height: auto; border-radius: 4px;" onclick="event.stopPropagation();">
+                                        <video preload="metadata" onclick="event.stopPropagation();">
                                             <source src="/app/content/{{.ID}}/preview" type="{{.MimeType}}">
                                             Your browser does not support the video tag.
                                         </video>
                                     {{end}}
 
-                                    <div class="content-meta" style="margin-top: 0.5rem;">
-                                        <h3 style="margin: 0.5rem 0;">{{.Title}}</h3>
+                                    <div class="content-meta">
+                                        <h3>{{.Title}}</h3>
                                         {{if .Description}}
-                                            <p style="margin: 0.5rem 0; color: #666;">{{.Description}}</p>
+                                            <p>{{.Description}}</p>
                                         {{end}}
-                                        <time style="font-size: 0.875rem; color: #999;">{{.UploadedAt.Format "2006-01-02 15:04:05"}}</time>
-                                        <p style="font-size: 0.875rem; color: #999;">Size: {{.FileSize}} bytes</p>
+                                        <time datetime="{{.UploadedAt.Format "2006-01-02T15:04:05Z07:00"}}">
+                                            {{.UploadedAt.Format "2006-01-02 15:04:05"}}
+                                        </time>
+                                        {{if and .Latitude .Longitude}}
+                                            <div class="location-badge">
+                                                📍 {{if .LocationName}}{{.LocationName}}{{else}}{{printf "%.4f, %.4f" (deref .Latitude) (deref .Longitude)}}{{end}}
+                                            </div>
+                                        {{end}}
                                     </div>
-                                </div>
-                            </a>
-                        {{end}}
+                                </a>
+                            {{end}}
+                        </div>
+                    {{end}}
+                {{else}}
+                    <div class="empty-state">
+                        <p>No content yet. Click "Add Content" to upload photos or videos.</p>
                     </div>
                 {{end}}
-            {{else}}
-                <p style="color: #999; font-style: italic;">No content yet. Click "Add Content" to upload photos or videos.</p>
-            {{end}}
-        </div>
+            </div>
 
-        <div id="content-form-modal"></div>
-        <div id="location-form-modal"></div>
+            <div id="content-form-modal"></div>
+            <div id="location-form-modal"></div>
+        </div>
     </div>
+
+    <script>
+        // Store content data with locations
+        const contentData = [
+            {{range .Sections}}
+                {{range .Contents}}
+                    {{if and .Latitude .Longitude}}
+                    {
+                        id: "{{.ID}}",
+                        title: "{{.Title}}",
+                        lat: {{.Latitude}},
+                        lng: {{.Longitude}},
+                        type: "{{.Type}}",
+                        date: "{{.UploadedAt.Format "2006-01-02 15:04:05"}}"
+                    },
+                    {{end}}
+                {{end}}
+            {{end}}
+        ];
+    </script>
+    <script src="/static/js/journey-map.js"></script>
+    <script async defer
+        src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&callback=initJourneyMap&libraries=marker&loading=async">
+    </script>
 </body>
 </html>

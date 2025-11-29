@@ -79,6 +79,7 @@ func Init(ctx context.Context, cfg Config) (*rest.Api, error) {
 		ui.GetContentPreview(dgraph, minioClient),
 		ui.GetLocationEditForm(dgraph),
 		ui.UpdateLocation(dgraph),
+		ui.ServeStaticFiles(),
 	)
 
 	return api, nil
